@@ -12,7 +12,7 @@ httpx==0.25.2
 asyncpg==0.29.0
 google-generativeai==0.3.2
 edge-tts==6.1.9
-cryptography==41.0.8
+cryptography==41.0.7
 python-telegram-bot==20.7
 aiofiles==23.2.1
 websockets==12.0
