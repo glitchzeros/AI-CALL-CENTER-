@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import { SoundProvider } from './hooks/useSound'
+import { TranslationProvider } from './hooks/useTranslation'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Pages
@@ -13,16 +14,19 @@ import SubscriptionPage from './pages/SubscriptionPage'
 import InvocationEditorPage from './pages/InvocationEditorPage'
 import StatisticsPage from './pages/StatisticsPage'
 import SessionsPage from './pages/SessionsPage'
+import TranslationTestPage from './pages/TranslationTestPage'
 
 function App() {
   return (
-    <AuthProvider>
-      <SoundProvider>
-        <div className="app">
+    <TranslationProvider>
+      <AuthProvider>
+        <SoundProvider>
+          <div className="app">
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/translation-test" element={<TranslationTestPage />} />
             
             {/* Protected routes */}
             <Route path="/company-number" element={
@@ -65,9 +69,10 @@ function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-        </div>
-      </SoundProvider>
-    </AuthProvider>
+          </div>
+        </SoundProvider>
+      </AuthProvider>
+    </TranslationProvider>
   )
 }
 

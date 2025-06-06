@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
-import { Eye, EyeOff, UserPlus, Phone, Mail, Lock } from 'lucide-react'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
+import { Eye, EyeOff, UserPlus, Phone, Mail, Lock, Globe } from 'lucide-react'
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -15,6 +16,7 @@ const RegisterPage = () => {
   const [countdown, setCountdown] = useState(0)
 
   const { register: registerUser, verifySMS, resendSMS } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const {
@@ -85,10 +87,18 @@ const RegisterPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-coffee-beige px-4">
         <div className="w-full max-w-md">
+          {/* Language Selector */}
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center space-x-2">
+              <Globe size={16} className="text-coffee-sienna" />
+              <LanguageSelector className="input-paper text-sm py-1 px-2" />
+            </div>
+          </div>
+
           <div className="text-center mb-8">
-            <h1 className="heading-decorative text-4xl mb-2">Verification</h1>
+            <h1 className="heading-decorative text-4xl mb-2">{t('auth', 'verificationTitle')}</h1>
             <p className="text-coffee-brown">
-              A verification code has been sent to your phone
+              {t('auth', 'verificationDescription')}
             </p>
             <p className="text-coffee-sienna text-sm mt-2">{registrationEmail}</p>
           </div>
@@ -97,18 +107,18 @@ const RegisterPage = () => {
             <form onSubmit={handleVerification} className="space-y-6">
               <div>
                 <label className="block text-coffee-brown font-medium mb-2">
-                  Verification Code
+                  {t('auth', 'verificationCode')}
                 </label>
                 <input
                   type="text"
                   maxLength="6"
                   className="input-paper w-full text-center text-2xl tracking-widest"
-                  placeholder="000000"
+                  placeholder={t('auth', 'verificationCodePlaceholder')}
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
                 />
                 <p className="text-coffee-sienna text-sm mt-2">
-                  Enter the 6-digit code sent to your phone
+                  {t('auth', 'verificationCodeHint')}
                 </p>
               </div>
 
@@ -120,7 +130,7 @@ const RegisterPage = () => {
                 {loading ? (
                   <div className="loading-quill w-5 h-5 mx-auto"></div>
                 ) : (
-                  'Verify Code'
+                  t('auth', 'verifyCode')
                 )}
               </button>
             </form>
@@ -134,9 +144,9 @@ const RegisterPage = () => {
                 {resendLoading ? (
                   <div className="loading-quill w-4 h-4 mx-auto"></div>
                 ) : countdown > 0 ? (
-                  `Resend in ${countdown}s`
+                  `${t('auth', 'resendIn')} ${countdown}s`
                 ) : (
-                  'Resend Code'
+                  t('auth', 'resendCode')
                 )}
               </button>
             </div>
@@ -146,7 +156,7 @@ const RegisterPage = () => {
                 onClick={() => setStep('register')}
                 className="text-coffee-sienna hover:text-coffee-brown text-sm underline"
               >
-                Back to registration
+                {t('auth', 'backToRegistration')}
               </button>
             </div>
           </div>
@@ -158,11 +168,19 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-coffee-beige px-4">
       <div className="w-full max-w-md">
+        {/* Language Selector */}
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center space-x-2">
+            <Globe size={16} className="text-coffee-sienna" />
+            <LanguageSelector className="input-paper text-sm py-1 px-2" />
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="heading-decorative text-4xl mb-2">Join Aetherium</h1>
-          <p className="text-coffee-sienna text-lg">Begin Your Journey</p>
-          <p className="text-coffee-brown mt-2">Create your account to access the Scribe's realm</p>
+          <h1 className="heading-decorative text-4xl mb-2">{t('auth', 'registerTitle')}</h1>
+          <p className="text-coffee-sienna text-lg">{t('auth', 'registerSubtitle')}</p>
+          <p className="text-coffee-brown mt-2">{t('auth', 'registerDescription')}</p>
         </div>
 
         {/* Registration Form */}
@@ -172,17 +190,17 @@ const RegisterPage = () => {
             <div>
               <label className="block text-coffee-brown font-medium mb-2">
                 <Mail size={16} className="inline mr-2" />
-                Email Address
+                {t('auth', 'emailAddress')}
               </label>
               <input
                 type="email"
                 className="input-paper w-full"
-                placeholder="your.email@example.com"
+                placeholder={t('auth', 'emailPlaceholder')}
                 {...register('email', {
-                  required: 'Email is required',
+                  required: t('auth', 'emailRequired'),
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address',
+                    message: t('auth', 'emailInvalid'),
                   },
                 })}
               />
@@ -195,17 +213,17 @@ const RegisterPage = () => {
             <div>
               <label className="block text-coffee-brown font-medium mb-2">
                 <Phone size={16} className="inline mr-2" />
-                Phone Number
+                {t('auth', 'phoneNumber')}
               </label>
               <input
                 type="tel"
                 className="input-paper w-full"
-                placeholder="+998901234567"
+                placeholder={t('auth', 'phonePlaceholder')}
                 {...register('phone_number', {
-                  required: 'Phone number is required',
+                  required: t('auth', 'phoneRequired'),
                   pattern: {
                     value: /^\+?[1-9]\d{1,14}$/,
-                    message: 'Invalid phone number format',
+                    message: t('auth', 'phoneInvalid'),
                   },
                 })}
               />
@@ -213,7 +231,7 @@ const RegisterPage = () => {
                 <p className="text-red-600 text-sm mt-1">{errors.phone_number.message}</p>
               )}
               <p className="text-coffee-sienna text-sm mt-1">
-                Include country code (e.g., +998901234567)
+                {t('auth', 'phoneHint')}
               </p>
             </div>
 
@@ -221,18 +239,18 @@ const RegisterPage = () => {
             <div>
               <label className="block text-coffee-brown font-medium mb-2">
                 <Lock size={16} className="inline mr-2" />
-                Password
+                {t('auth', 'password')}
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="input-paper w-full pr-12"
-                  placeholder="Create a strong password"
+                  placeholder={t('auth', 'createPassword')}
                   {...register('password', {
-                    required: 'Password is required',
+                    required: t('auth', 'passwordRequired'),
                     minLength: {
                       value: 8,
-                      message: 'Password must be at least 8 characters',
+                      message: t('auth', 'passwordMinLength'),
                     },
                   })}
                 />
@@ -253,17 +271,17 @@ const RegisterPage = () => {
             <div>
               <label className="block text-coffee-brown font-medium mb-2">
                 <Lock size={16} className="inline mr-2" />
-                Confirm Password
+                {t('auth', 'confirmPassword')}
               </label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   className="input-paper w-full pr-12"
-                  placeholder="Confirm your password"
+                  placeholder={t('auth', 'confirmPassword')}
                   {...register('confirm_password', {
-                    required: 'Please confirm your password',
+                    required: t('auth', 'confirmPasswordRequired'),
                     validate: (value) =>
-                      value === password || 'Passwords do not match',
+                      value === password || t('auth', 'passwordsNotMatch'),
                   })}
                 />
                 <button
@@ -290,7 +308,7 @@ const RegisterPage = () => {
               ) : (
                 <>
                   <UserPlus size={20} />
-                  <span>Create Account</span>
+                  <span>{t('auth', 'createAccount')}</span>
                 </>
               )}
             </button>
@@ -299,12 +317,12 @@ const RegisterPage = () => {
           {/* Login Link */}
           <div className="mt-6 text-center">
             <p className="text-coffee-brown">
-              Already have an account?{' '}
+              {t('auth', 'alreadyHaveAccount')}{' '}
               <Link
                 to="/login"
                 className="text-coffee-sienna hover:text-coffee-brown font-medium underline"
               >
-                Sign in here
+                {t('auth', 'signInHere')}
               </Link>
             </p>
           </div>
@@ -313,7 +331,7 @@ const RegisterPage = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-coffee-sienna text-sm">
-            By creating an account, you agree to let the Scribe serve your communication needs
+            {t('auth', 'registerFooter')}
           </p>
         </div>
       </div>

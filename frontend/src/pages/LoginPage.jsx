@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
+import { Eye, EyeOff, LogIn, Globe } from 'lucide-react'
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const { login, isAuthenticated, isFirstLogin } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -48,11 +50,19 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-coffee-beige px-4">
       <div className="w-full max-w-md">
+        {/* Language Selector */}
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center space-x-2">
+            <Globe size={16} className="text-coffee-sienna" />
+            <LanguageSelector className="input-paper text-sm py-1 px-2" />
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="heading-decorative text-4xl mb-2">Aetherium</h1>
-          <p className="text-coffee-sienna text-lg">The Scribe's Portal</p>
-          <p className="text-coffee-brown mt-2">Enter your credentials to access the realm</p>
+          <h1 className="heading-decorative text-4xl mb-2">{t('common', 'aetherium')}</h1>
+          <p className="text-coffee-sienna text-lg">{t('auth', 'loginTitle')}</p>
+          <p className="text-coffee-brown mt-2">{t('auth', 'loginSubtitle')}</p>
         </div>
 
         {/* Login Form */}
@@ -61,14 +71,14 @@ const LoginPage = () => {
             {/* Login Identifier */}
             <div>
               <label className="block text-coffee-brown font-medium mb-2">
-                Email or Phone Number
+                {t('auth', 'emailOrPhone')}
               </label>
               <input
                 type="text"
                 className="input-paper w-full"
-                placeholder="Enter your email or phone number"
+                placeholder={t('auth', 'emailOrPhonePlaceholder')}
                 {...register('login_identifier', {
-                  required: 'Email or phone number is required',
+                  required: t('auth', 'loginIdentifierRequired'),
                 })}
               />
               {errors.login_identifier && (
@@ -79,15 +89,15 @@ const LoginPage = () => {
             {/* Password */}
             <div>
               <label className="block text-coffee-brown font-medium mb-2">
-                Password
+                {t('auth', 'password')}
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="input-paper w-full pr-12"
-                  placeholder="Enter your password"
+                  placeholder={t('auth', 'passwordPlaceholder')}
                   {...register('password', {
-                    required: 'Password is required',
+                    required: t('auth', 'passwordRequired'),
                   })}
                 />
                 <button
@@ -114,7 +124,7 @@ const LoginPage = () => {
               ) : (
                 <>
                   <LogIn size={20} />
-                  <span>Enter the Realm</span>
+                  <span>{t('auth', 'enterRealm')}</span>
                 </>
               )}
             </button>
@@ -123,12 +133,12 @@ const LoginPage = () => {
           {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-coffee-brown">
-              New to Aetherium?{' '}
+              {t('auth', 'newToAetherium')}{' '}
               <Link
                 to="/register"
                 className="text-coffee-sienna hover:text-coffee-brown font-medium underline"
               >
-                Begin your journey
+                {t('auth', 'beginJourney')}
               </Link>
             </p>
           </div>
@@ -137,7 +147,7 @@ const LoginPage = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-coffee-sienna text-sm">
-            "Where AI Scribes dwell and conversations flow like ink upon parchment"
+            "{t('auth', 'loginFooter')}"
           </p>
         </div>
       </div>

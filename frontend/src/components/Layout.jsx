@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
 import { 
   Home, 
   Settings, 
@@ -11,12 +12,14 @@ import {
   CreditCard,
   LogOut,
   Volume2,
-  VolumeX
+  VolumeX,
+  Globe
 } from 'lucide-react'
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth()
   const { soundEnabled, toggleSounds } = useSound()
+  const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -26,11 +29,11 @@ const Layout = ({ children }) => {
   }
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Home },
-    { path: '/invocation-editor', label: 'Invocation Editor', icon: Workflow },
-    { path: '/sessions', label: 'Sessions', icon: MessageSquare },
-    { path: '/statistics', label: 'Statistics', icon: BarChart3 },
-    { path: '/subscription', label: 'Subscription', icon: CreditCard },
+    { path: '/dashboard', label: t('navigation', 'dashboard'), icon: Home },
+    { path: '/invocation-editor', label: t('navigation', 'invocationEditor'), icon: Workflow },
+    { path: '/sessions', label: t('navigation', 'sessions'), icon: MessageSquare },
+    { path: '/statistics', label: t('navigation', 'statistics'), icon: BarChart3 },
+    { path: '/subscription', label: t('navigation', 'subscription'), icon: CreditCard },
   ]
 
   return (
@@ -40,8 +43,8 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center space-x-4">
-            <h1 className="heading-decorative text-2xl">Aetherium</h1>
-            <span className="text-coffee-sienna text-sm">The Scribe's Desk</span>
+            <h1 className="heading-decorative text-2xl">{t('common', 'aetherium')}</h1>
+            <span className="text-coffee-sienna text-sm">{t('common', 'scribe')}'s Desk</span>
           </div>
 
           {/* Navigation Links */}
@@ -65,6 +68,12 @@ const Layout = ({ children }) => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
+            {/* Language Selector */}
+            <div className="flex items-center space-x-2">
+              <Globe size={16} className="text-coffee-sienna" />
+              <LanguageSelector className="input-paper text-sm py-1 px-2" />
+            </div>
+
             {/* Sound Toggle */}
             <button
               onClick={toggleSounds}
@@ -86,7 +95,7 @@ const Layout = ({ children }) => {
             <button
               onClick={handleLogout}
               className="p-2 rounded-full hover:bg-coffee-tan transition-colors text-coffee-brown"
-              title="Logout"
+              title={t('common', 'logout')}
             >
               <LogOut size={20} />
             </button>

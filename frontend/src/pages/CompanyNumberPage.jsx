@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Phone, ArrowRight, Copy, Check } from 'lucide-react'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
+import { Phone, ArrowRight, Copy, Check, Globe } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const CompanyNumberPage = () => {
   const { user, clearFirstLoginFlag } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [copied, setCopied] = React.useState(false)
 
@@ -46,10 +48,18 @@ const CompanyNumberPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-coffee-beige px-4">
       <div className="w-full max-w-2xl">
+        {/* Language Selector */}
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center space-x-2">
+            <Globe size={16} className="text-coffee-sienna" />
+            <LanguageSelector className="input-paper text-sm py-1 px-2" />
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="heading-decorative text-4xl mb-4">Welcome to Aetherium</h1>
-          <p className="text-coffee-sienna text-xl">Your Scribe Awaits</p>
+          <h1 className="heading-decorative text-4xl mb-4">Welcome to {t('common', 'aetherium')}</h1>
+          <p className="text-coffee-sienna text-xl">Your {t('common', 'scribe')} Awaits</p>
         </div>
 
         {/* Main Content */}
@@ -63,7 +73,7 @@ const CompanyNumberPage = () => {
 
           {/* Company Number Display */}
           <div className="mb-8">
-            <h2 className="heading-secondary mb-4">Your Scribe's Direct Line</h2>
+            <h2 className="heading-secondary mb-4">{t('companyNumber', 'title')}</h2>
             
             <div className="bg-coffee-khaki border-2 border-coffee-sienna rounded-lg p-6 mb-4">
               <div className="flex items-center justify-center space-x-4">
@@ -73,7 +83,7 @@ const CompanyNumberPage = () => {
                 <button
                   onClick={handleCopyNumber}
                   className="p-2 hover:bg-coffee-tan rounded-full transition-colors"
-                  title="Copy number"
+                  title={t('common', 'copy')}
                 >
                   {copied ? (
                     <Check size={24} className="text-green-600" />
@@ -87,7 +97,7 @@ const CompanyNumberPage = () => {
             {/* Sacred Text */}
             <div className="bg-coffee-beige border border-coffee-tan rounded-lg p-6 mb-6">
               <p className="text-coffee-brown text-lg italic leading-relaxed">
-                "This is your Scribe's direct line. It is the conduit for your automated conversations. Guard it well."
+                "{t('companyNumber', 'description')}"
               </p>
             </div>
           </div>
@@ -130,7 +140,7 @@ const CompanyNumberPage = () => {
             onClick={handleContinue}
             className="btn-primary flex items-center justify-center space-x-2 mx-auto"
           >
-            <span>Enter the Dashboard</span>
+            <span>{t('companyNumber', 'continueToPortal')}</span>
             <ArrowRight size={20} />
           </button>
         </div>
@@ -138,7 +148,7 @@ const CompanyNumberPage = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-coffee-sienna text-sm">
-            Your journey with the Scribe begins now. May your conversations flow like ink upon parchment.
+            {t('companyNumber', 'footer')}
           </p>
         </div>
       </div>

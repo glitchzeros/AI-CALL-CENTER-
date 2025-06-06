@@ -358,6 +358,37 @@ body {
   pointer-events: none;
 }
 
+/* Language Selector Styles */
+.language-selector {
+  background: var(--coffee-beige);
+  border: 1px solid var(--coffee-tan);
+  border-radius: 4px;
+  color: var(--coffee-brown);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 80px;
+}
+
+.language-selector:hover {
+  border-color: var(--coffee-sienna);
+  background: var(--coffee-khaki);
+}
+
+.language-selector:focus {
+  outline: none;
+  border-color: var(--coffee-sienna);
+  box-shadow: 0 0 0 2px rgba(160, 82, 45, 0.2);
+}
+
+.language-selector option {
+  background: var(--coffee-beige);
+  color: var(--coffee-brown);
+  padding: 0.25rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .paper-panel {
