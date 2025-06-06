@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 from database.connection import get_database, init_database
-from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration
+from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support
 from services.dream_journal import DreamJournalService
 from services.gemini_client import GeminiClient
 from services.edge_tts_client import EdgeTTSClient
@@ -77,6 +77,7 @@ app.include_router(sessions.router, prefix="/api/sessions", tags=["Sessions"])
 app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(telegram_integration.router, prefix="/api/telegram", tags=["Telegram"])
+app.include_router(support.router, tags=["Support"])
 
 @app.get("/")
 async def root():

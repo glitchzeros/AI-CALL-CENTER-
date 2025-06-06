@@ -327,6 +327,44 @@ Conversations:
         else:
             return "en"  # Default to English
     
+    async def generate_text_response(
+        self,
+        prompt: str,
+        max_tokens: int = 1000,
+        temperature: float = 0.7
+    ) -> str:
+        """
+        Generate a simple text response from a text prompt
+        Used for support chat and other text-only interactions
+        
+        Args:
+            prompt: The text prompt
+            max_tokens: Maximum response length
+            temperature: Creativity level (0.0 to 1.0)
+            
+        Returns:
+            Generated response text
+        """
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                    top_p=0.95,
+                    top_k=40
+                )
+            )
+            
+            response_text = response.text if response.text else ""
+            logger.info(f"Text response generated: {len(response_text)} chars")
+            
+            return response_text
+            
+        except Exception as e:
+            logger.error(f"Text generation error: {e}")
+            return ""
+    
     async def count_tokens(self, text: str) -> int:
         """
         Count tokens in text for context management

@@ -118,11 +118,7 @@ Always be helpful, professional, and maintain the thematic language of "The Scri
         },
         body: JSON.stringify({
           message: inputMessage.trim(),
-          conversation_history: messages.map(msg => ({
-            role: msg.type === 'user' ? 'user' : 'assistant',
-            content: msg.content
-          })),
-          system_prompt: systemPrompt
+          language: language
         })
       })
 
