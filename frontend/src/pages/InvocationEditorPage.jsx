@@ -256,7 +256,7 @@ const InvocationEditorPage = () => {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="loading-quill mb-4"></div>
-            <p className="text-coffee-brown">The Scribe is preparing the canvas...</p>
+            <p className="text-coffee-brown">{t('invocationEditor', 'loading')}</p>
           </div>
         </div>
       </Layout>
@@ -307,7 +307,7 @@ const InvocationEditorPage = () => {
         <div className="flex flex-1 overflow-hidden">
           {/* Workflow List Sidebar */}
           <div className="w-64 bg-coffee-beige border-r-2 border-coffee-tan p-4 overflow-y-auto">
-            <h2 className="heading-secondary text-lg mb-4">Saved Workflows</h2>
+            <h2 className="heading-secondary text-lg mb-4">{t('invocationEditor', 'savedWorkflows')}</h2>
             <div className="space-y-2">
               {workflows?.map(workflow => (
                 <div
@@ -423,8 +423,8 @@ const InvocationEditorPage = () => {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center text-coffee-sienna">
                       <Edit3 size={48} className="mx-auto mb-4 opacity-50" />
-                      <p className="text-lg font-medium">Drag Invocations from the palette</p>
-                      <p className="text-sm">to begin crafting your Scribe's behavior</p>
+                      <p className="text-lg font-medium">{t('invocationEditor', 'dragInstructions')}</p>
+                      <p className="text-sm">{t('invocationEditor', 'craftBehavior')}</p>
                     </div>
                   </div>
                 )}
@@ -433,7 +433,7 @@ const InvocationEditorPage = () => {
 
             {/* Invocation Palette */}
             <div className="w-80 bg-coffee-beige border-l-2 border-coffee-tan p-4 overflow-y-auto">
-              <h2 className="heading-secondary text-lg mb-4">Book of Invocations</h2>
+              <h2 className="heading-secondary text-lg mb-4">{t('invocationEditor', 'bookOfInvocations')}</h2>
               
               <div className="space-y-3">
                 {invocationTypes.map(invocation => {

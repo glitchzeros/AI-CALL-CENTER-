@@ -687,7 +687,14 @@ export const translations = {
       scriptLoaded: 'Script loaded successfully',
       canvasCleared: 'Canvas cleared',
       invalidConnection: 'Invalid connection',
-      nodeConfigured: 'Node configured successfully'
+      nodeConfigured: 'Node configured successfully',
+      workflowNamePlaceholder: 'Workflow name...',
+      new: 'New',
+      save: 'Save',
+      savedWorkflows: 'Saved Workflows',
+      dragInstructions: 'Drag Invocations from the palette',
+      craftBehavior: 'to begin crafting your Scribe\'s behavior',
+      loading: 'The Scribe is preparing the canvas...'
     },
     uz: {
       title: 'Chaqiriq Muharriri',
@@ -715,7 +722,14 @@ export const translations = {
       scriptLoaded: 'Skript muvaffaqiyatli yuklandi',
       canvasCleared: 'Kanvas tozalandi',
       invalidConnection: 'Noto\'g\'ri ulanish',
-      nodeConfigured: 'Tugun muvaffaqiyatli sozlandi'
+      nodeConfigured: 'Tugun muvaffaqiyatli sozlandi',
+      workflowNamePlaceholder: 'Ish oqimi nomi...',
+      new: 'Yangi',
+      save: 'Saqlash',
+      savedWorkflows: 'Saqlangan Ish Oqimlari',
+      dragInstructions: 'Palitadan Chaqiriqlarni sudrab oling',
+      craftBehavior: 'Kotibingizning xatti-harakatini yaratishni boshlash uchun',
+      loading: 'Kotib kanvasni tayyorlamoqda...'
     },
     ru: {
       title: 'Редактор Вызовов',
@@ -743,7 +757,14 @@ export const translations = {
       scriptLoaded: 'Скрипт успешно загружен',
       canvasCleared: 'Холст очищен',
       invalidConnection: 'Недопустимое соединение',
-      nodeConfigured: 'Узел успешно настроен'
+      nodeConfigured: 'Узел успешно настроен',
+      workflowNamePlaceholder: 'Название рабочего процесса...',
+      new: 'Новый',
+      save: 'Сохранить',
+      savedWorkflows: 'Сохраненные Рабочие Процессы',
+      dragInstructions: 'Перетащите Вызовы из палитры',
+      craftBehavior: 'чтобы начать создание поведения вашего Писца',
+      loading: 'Писец готовит холст...'
     }
   },
 
