@@ -1,0 +1,398 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Coffee Paper Theme - The Scribe's Aesthetic */
+
+:root {
+  /* Color Palette */
+  --coffee-beige: #F5F5DC;
+  --coffee-khaki: #F0E68C;
+  --coffee-tan: #D2B48C;
+  --coffee-brown: #8B4513;
+  --coffee-sienna: #A0522D;
+  --coffee-green: #8FBC8F;
+  --coffee-blue: #B0C4DE;
+  
+  /* Typography */
+  --font-heading: 'Cinzel Decorative', serif;
+  --font-body: 'Vollkorn', serif;
+  --font-mono: 'Source Code Pro', monospace;
+  
+  /* Shadows and Effects */
+  --paper-shadow: 0 4px 8px rgba(139, 69, 19, 0.1);
+  --ink-shadow: 0 2px 4px rgba(139, 69, 19, 0.2);
+  --coffee-stain: radial-gradient(circle, rgba(210, 180, 140, 0.3) 0%, transparent 70%);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--coffee-beige);
+  background-image: 
+    /* Paper texture */
+    radial-gradient(circle at 20% 80%, rgba(210, 180, 140, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
+    /* Subtle grid lines */
+    linear-gradient(45deg, transparent 49%, rgba(210, 180, 140, 0.02) 50%, transparent 51%);
+  color: var(--coffee-brown);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Typography Classes */
+.heading-decorative {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--coffee-brown);
+  text-shadow: var(--ink-shadow);
+}
+
+.heading-primary {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  color: var(--coffee-brown);
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.heading-secondary {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--coffee-sienna);
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.text-body {
+  font-family: var(--font-body);
+  color: var(--coffee-brown);
+  font-size: 1rem;
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  color: var(--coffee-brown);
+}
+
+/* Paper-like Components */
+.paper-panel {
+  background: var(--coffee-beige);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(210, 180, 140, 0.1) 0%, transparent 50%),
+    linear-gradient(0deg, transparent 49%, rgba(210, 180, 140, 0.03) 50%, transparent 51%);
+  border: 1px solid var(--coffee-tan);
+  border-radius: 4px;
+  box-shadow: var(--paper-shadow);
+  padding: 1.5rem;
+  position: relative;
+}
+
+.paper-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 80% 10%, rgba(210, 180, 140, 0.05) 0%, transparent 30%),
+    radial-gradient(circle at 20% 90%, rgba(139, 69, 19, 0.03) 0%, transparent 40%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Aged paper effect for high-usage elements */
+.paper-aged {
+  background-image: 
+    radial-gradient(circle at 30% 70%, rgba(210, 180, 140, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(139, 69, 19, 0.1) 0%, transparent 40%),
+    linear-gradient(45deg, transparent 49%, rgba(210, 180, 140, 0.05) 50%, transparent 51%);
+  border-color: var(--coffee-sienna);
+}
+
+/* Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, var(--coffee-khaki) 0%, var(--coffee-tan) 100%);
+  border: 2px solid var(--coffee-sienna);
+  color: var(--coffee-brown);
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--ink-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--coffee-tan) 0%, var(--coffee-sienna) 100%);
+  color: var(--coffee-beige);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 69, 19, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--ink-shadow);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--coffee-tan);
+  color: var(--coffee-brown);
+  font-family: var(--font-body);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--coffee-tan);
+  color: var(--coffee-brown);
+  border-color: var(--coffee-sienna);
+}
+
+/* Input Styles */
+.input-paper {
+  background: var(--coffee-beige);
+  border: 2px solid var(--coffee-tan);
+  color: var(--coffee-brown);
+  font-family: var(--font-body);
+  padding: 0.75rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  background-image: linear-gradient(0deg, transparent 49%, rgba(210, 180, 140, 0.1) 50%, transparent 51%);
+}
+
+.input-paper:focus {
+  outline: none;
+  border-color: var(--coffee-sienna);
+  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+  background-image: linear-gradient(0deg, transparent 49%, rgba(210, 180, 140, 0.2) 50%, transparent 51%);
+}
+
+.input-paper::placeholder {
+  color: var(--coffee-sienna);
+  opacity: 0.7;
+}
+
+/* Card Styles */
+.card-paper {
+  @apply paper-panel;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.card-paper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(139, 69, 19, 0.15);
+}
+
+/* Navigation Styles */
+.nav-scribe {
+  background: var(--coffee-khaki);
+  background-image: 
+    linear-gradient(90deg, transparent 49%, rgba(139, 69, 19, 0.05) 50%, transparent 51%);
+  border-bottom: 3px solid var(--coffee-sienna);
+  padding: 1rem 2rem;
+  box-shadow: var(--paper-shadow);
+}
+
+.nav-link {
+  color: var(--coffee-brown);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  background: var(--coffee-tan);
+  color: var(--coffee-brown);
+}
+
+.nav-link.active {
+  background: var(--coffee-sienna);
+  color: var(--coffee-beige);
+}
+
+/* Invocation Editor Styles */
+.canvas-paper {
+  background: var(--coffee-beige);
+  background-image: 
+    /* Grid lines */
+    linear-gradient(rgba(210, 180, 140, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(210, 180, 140, 0.3) 1px, transparent 1px),
+    /* Paper texture */
+    radial-gradient(circle at 25% 75%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
+  background-size: 20px 20px, 20px 20px, 100% 100%;
+  border: 2px solid var(--coffee-tan);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.invocation-node {
+  background: var(--coffee-khaki);
+  border: 2px solid var(--coffee-sienna);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: var(--paper-shadow);
+  cursor: move;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.invocation-node:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 12px rgba(139, 69, 19, 0.2);
+}
+
+.invocation-node.selected {
+  border-color: var(--coffee-brown);
+  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.2);
+}
+
+/* Connection lines */
+.logic-thread {
+  stroke: var(--coffee-sienna);
+  stroke-width: 2;
+  fill: none;
+  filter: drop-shadow(1px 1px 2px rgba(139, 69, 19, 0.3));
+}
+
+/* Statistics Charts */
+.chart-paper {
+  background: var(--coffee-beige);
+  border: 1px solid var(--coffee-tan);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: var(--paper-shadow);
+}
+
+/* Modal Styles */
+.modal-scroll {
+  background: var(--coffee-beige);
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(210, 180, 140, 0.1) 0%, transparent 50%),
+    linear-gradient(0deg, transparent 49%, rgba(210, 180, 140, 0.05) 50%, transparent 51%);
+  border: 3px solid var(--coffee-sienna);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(139, 69, 19, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-scroll::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 20px;
+  background: linear-gradient(90deg, transparent 0%, var(--coffee-tan) 50%, transparent 100%);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Loading States */
+.loading-quill {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--coffee-tan);
+  border-top: 3px solid var(--coffee-brown);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utility Classes */
+.coffee-stain {
+  position: relative;
+}
+
+.coffee-stain::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  right: 10%;
+  width: 30px;
+  height: 30px;
+  background: var(--coffee-stain);
+  border-radius: 50%;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.ink-blot {
+  position: relative;
+}
+
+.ink-blot::before {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 10px;
+  width: 8px;
+  height: 8px;
+  background: var(--coffee-sienna);
+  border-radius: 50%;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .paper-panel {
+    padding: 1rem;
+  }
+  
+  .nav-scribe {
+    padding: 0.75rem 1rem;
+  }
+  
+  .heading-primary {
+    font-size: 1.5rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --coffee-brown: #000000;
+    --coffee-sienna: #333333;
+    --coffee-tan: #666666;
+  }
+}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aetherium - The Scribe's Desk</title>
+    
+    <!-- Coffee Paper Theme Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Vollkorn:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+      /* Coffee Paper Theme Base Styles */
+      :root {
+        --coffee-beige: #F5F5DC;
+        --coffee-khaki: #F0E68C;
+        --coffee-tan: #D2B48C;
+        --coffee-brown: #8B4513;
+        --coffee-sienna: #A0522D;
+        --coffee-green: #8FBC8F;
+        --coffee-blue: #B0C4DE;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Vollkorn', serif;
+        background-color: var(--coffee-beige);
+        background-image: 
+          radial-gradient(circle at 20% 80%, rgba(210, 180, 140, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
+          linear-gradient(45deg, transparent 49%, rgba(210, 180, 140, 0.02) 50%, transparent 51%);
+        min-height: 100vh;
+      }
+      
+      /* Loading animation */
+      .loading-scribe {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--coffee-beige);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .loading-text {
+        font-family: 'Cinzel Decorative', serif;
+        font-size: 2rem;
+        color: var(--coffee-brown);
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+      
+      .loading-quill {
+        width: 60px;
+        height: 60px;
+        border: 3px solid var(--coffee-tan);
+        border-top: 3px solid var(--coffee-brown);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Loading screen while React loads -->
+      <div class="loading-scribe">
+        <div class="loading-text">The Scribe Awakens...</div>
+        <div class="loading-quill"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
