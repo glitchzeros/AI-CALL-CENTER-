@@ -86,9 +86,27 @@ export const statisticsAPI = {
 
 // Payments API
 export const paymentsAPI = {
-  getTransactions: (params = {}) => api.get('/payments/transactions', { params }),
-  getTransaction: (id) => api.get(`/payments/transactions/${id}`),
-  getPaymentStatus: (merchantTransId) => api.get(`/payments/status/${merchantTransId}`),
+  initiateConsultationPayment: (data) =>
+    api.post('/payments/initiate-consultation', data),
+  
+  getPaymentStatus: (paymentId) =>
+    api.get(`/payments/status/${paymentId}`),
+  
+  confirmSMSPayment: (data) =>
+    api.post('/payments/confirm-sms', data),
+  
+  cancelPayment: (paymentId) =>
+    api.post(`/payments/cancel/${paymentId}`),
+  
+  getBankInfo: () =>
+    api.get('/payments/bank-info'),
+  
+  getPaymentSessions: () =>
+    api.get('/payments/sessions'),
+  
+  // Legacy transactions (for history)
+  getTransactions: (params = {}) => 
+    api.get('/payments/sessions', { params })
 }
 
 // Telegram API

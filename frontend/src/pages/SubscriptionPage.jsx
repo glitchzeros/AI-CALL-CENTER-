@@ -42,33 +42,58 @@ const SubscriptionPage = () => {
     () => paymentsAPI.getTransactions({ limit: 10 })
   )
 
-  // Payment initiation mutation
+  // Manual payment initiation mutation
   const initiatePaymentMutation = useMutation(
-    (tierData) => subscriptionsAPI.initiatePayment(tierData),
+    (tierData) => paymentsAPI.initiateConsultationPayment(tierData),
     {
       onSuccess: (data) => {
-        // Redirect to payment URL
-        window.open(data.payment_url, '_blank')
-        toast.success('Payment initiated. Complete the transaction in the new window.')
+        // Show payment instructions modal
+        setPaymentInstructions(data)
+        setShowPaymentModal(true)
         setIsProcessingPayment(false)
+        toast.success('To\'lov ko\'rsatmalari tayyor. 30 daqiqa ichida to\'lovni amalga oshiring.')
       },
       onError: (error) => {
-        toast.error(error.response?.data?.detail || 'Failed to initiate payment')
+        toast.error(error.response?.data?.detail || 'To\'lov boshlanmadi')
         setIsProcessingPayment(false)
       }
     }
   )
+
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentInstructions, setPaymentInstructions] = useState(null)
+  const [timeRemaining, setTimeRemaining] = useState(0)
 
   const handleSubscribe = async (tier) => {
     setSelectedTier(tier)
     setIsProcessingPayment(true)
     
     try {
-      await initiatePaymentMutation.mutateAsync({ tier_id: tier.id })
+      await initiatePaymentMutation.mutateAsync({ tier_name: tier.name })
     } catch (error) {
       // Error handled in mutation
     }
   }
+
+  // Timer for payment window
+  useEffect(() => {
+    if (paymentInstructions && showPaymentModal) {
+      const interval = setInterval(() => {
+        const now = new Date()
+        const expiresAt = new Date(paymentInstructions.expires_at)
+        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+        
+        setTimeRemaining(remaining)
+        
+        if (remaining === 0) {
+          setShowPaymentModal(false)
+          toast.error('To\'lov vaqti tugadi. Qaytadan urinib ko\'ring.')
+        }
+      }, 1000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [paymentInstructions, showPaymentModal])
 
   const getTierIcon = (tierName) => {
     switch (tierName.toLowerCase()) {
@@ -123,8 +148,11 @@ const SubscriptionPage = () => {
           
           <h3 className="heading-secondary text-xl mb-2">{tier.name}</h3>
           <div className="mb-4">
-            <span className="text-4xl font-bold text-coffee-brown">${tier.price_usd}</span>
-            <span className="text-coffee-sienna ml-2">USD/month</span>
+            <span className="text-3xl font-bold text-coffee-brown">{(tier.price_usd * 12300).toLocaleString()}</span>
+            <span className="text-coffee-sienna ml-2">so'm/oy</span>
+            <div className="text-sm text-coffee-sienna mt-1">
+              (${tier.price_usd} USD)
+            </div>
           </div>
         </div>
 
@@ -433,8 +461,157 @@ const SubscriptionPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Payment Instructions Modal */}
+        {showPaymentModal && paymentInstructions && (
+          <PaymentInstructionsModal
+            instructions={paymentInstructions}
+            timeRemaining={timeRemaining}
+            onClose={() => setShowPaymentModal(false)}
+          />
+        )}
       </div>
     </Layout>
+  )
+}
+
+// Payment Instructions Modal Component
+const PaymentInstructionsModal = ({ instructions, timeRemaining, onClose }) => {
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${minutes}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+    toast.success('Nusxalandi!')
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-scroll max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="heading-secondary text-2xl">To'lov Ko'rsatmalari</h2>
+          <div className="flex items-center space-x-4">
+            <div className={`text-lg font-bold ${timeRemaining < 300 ? 'text-red-600' : 'text-coffee-brown'}`}>
+              {formatTime(timeRemaining)}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-coffee-tan rounded-full"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Amount Display */}
+          <div className="text-center bg-coffee-khaki p-6 rounded-lg border-2 border-coffee-sienna">
+            <h3 className="text-2xl font-bold text-coffee-brown mb-2">
+              {instructions.amount_uzs?.toLocaleString()} so'm
+            </h3>
+            <p className="text-coffee-sienna">
+              (${instructions.amount_usd} USD) - {instructions.payment_instructions?.title}
+            </p>
+          </div>
+
+          {/* Bank Details */}
+          <div className="bg-coffee-beige p-6 rounded-lg border border-coffee-tan">
+            <h3 className="font-bold text-coffee-brown mb-4">Bank Ma'lumotlari:</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-coffee-sienna">Karta raqami:</span>
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono font-bold text-coffee-brown">
+                    {instructions.bank_details?.card_number}
+                  </span>
+                  <button
+                    onClick={() => copyToClipboard(instructions.bank_details?.card_number)}
+                    className="btn-secondary text-xs px-2 py-1"
+                  >
+                    Nusxalash
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="text-coffee-sienna">Bank:</span>
+                <span className="font-medium text-coffee-brown">
+                  {instructions.bank_details?.bank_name}
+                </span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="text-coffee-sienna">Karta egasi:</span>
+                <span className="font-medium text-coffee-brown">
+                  {instructions.bank_details?.cardholder_name}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Reference Code */}
+          <div className="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg">
+            <h3 className="font-bold text-yellow-800 mb-2">Muhim! Reference Kod:</h3>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xl font-bold text-yellow-900">
+                {instructions.reference_code}
+              </span>
+              <button
+                onClick={() => copyToClipboard(instructions.reference_code)}
+                className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1 rounded font-medium"
+              >
+                Nusxalash
+              </button>
+            </div>
+            <p className="text-yellow-800 text-sm mt-2">
+              To'lov izohida albatta ushbu kodni ko'rsating!
+            </p>
+          </div>
+
+          {/* Instructions */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-coffee-brown">Ko'rsatmalar:</h3>
+            <ol className="list-decimal list-inside space-y-2 text-coffee-brown">
+              {instructions.payment_instructions?.instructions?.map((instruction, index) => (
+                <li key={index} className="text-sm">{instruction}</li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Important Notes */}
+          <div className="bg-red-50 border-2 border-red-400 p-4 rounded-lg">
+            <h3 className="font-bold text-red-800 mb-2">Diqqat!</h3>
+            <ul className="list-disc list-inside space-y-1 text-red-800 text-sm">
+              {instructions.payment_instructions?.important_notes?.map((note, index) => (
+                <li key={index}>{note}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between space-x-4">
+            <button
+              onClick={onClose}
+              className="btn-secondary flex-1"
+            >
+              Yopish
+            </button>
+            <button
+              onClick={() => {
+                // Refresh page to check payment status
+                window.location.reload()
+              }}
+              className="btn-primary flex-1"
+            >
+              To'lov Holatini Tekshirish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 

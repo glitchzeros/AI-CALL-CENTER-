@@ -12,7 +12,7 @@ from typing import List
 from database.connection import get_database
 from models.user import User, SubscriptionTier
 from routers.auth import get_current_user
-from services.payment_service import PaymentService
+from services.manual_payment_service import ManualPaymentService
 
 router = APIRouter()
 
@@ -74,19 +74,24 @@ async def initiate_payment(
         if not tier:
             raise HTTPException(status_code=404, detail="Subscription tier not found")
         
-        # Initiate payment
-        payment_service = PaymentService()
-        result = await payment_service.initiate_payment(
+        # Initiate manual payment
+        payment_service = ManualPaymentService()
+        result = await payment_service.initiate_consultation_payment(
             user_id=current_user.id,
-            tier_id=tier.id,
-            amount=float(tier.price_usd)
+            tier_name=tier.name,
+            tier_price_usd=float(tier.price_usd),
+            company_number=current_user.company_number
         )
         
         if result["success"]:
             return {
-                "payment_url": result["redirect_url"],
+                "success": True,
                 "payment_id": result["payment_id"],
-                "amount": result["amount"],
+                "reference_code": result["reference_code"],
+                "amount_uzs": result["amount_uzs"],
+                "expires_at": result["expires_at"],
+                "payment_instructions": result["payment_instructions"],
+                "bank_details": result["bank_details"],
                 "tier_name": tier.name
             }
         else:

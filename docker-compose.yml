@@ -28,8 +28,10 @@ services:
     environment:
       - DATABASE_URL=postgresql://aetherium_user:${DB_PASSWORD:-aetherium_secure_pass_2024}@database:5432/aetherium
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - CLICK_SECRET_KEY=${CLICK_SECRET_KEY}
-      - CLICK_SERVICE_ID=${CLICK_SERVICE_ID}
+      - COMPANY_BANK_CARD=${COMPANY_BANK_CARD}
+      - COMPANY_BANK_NAME=${COMPANY_BANK_NAME}
+      - COMPANY_CARDHOLDER_NAME=${COMPANY_CARDHOLDER_NAME}
+      - COMPANY_BANK_PHONE=${COMPANY_BANK_PHONE}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-aetherium_jwt_secret_2024}
     ports:

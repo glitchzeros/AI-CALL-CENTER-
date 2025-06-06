@@ -110,61 +110,7 @@ async def health_check():
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service unhealthy")
 
-@app.post("/api/click/callback")
-async def click_payment_callback(request: Request, background_tasks: BackgroundTasks):
-    """
-    Click API payment callback endpoint
-    Handles payment confirmations from Click payment gateway
-    """
-    try:
-        form_data = await request.form()
-        
-        # Extract Click API parameters
-        click_trans_id = form_data.get("click_trans_id")
-        service_id = form_data.get("service_id")
-        click_paydoc_id = form_data.get("click_paydoc_id")
-        merchant_trans_id = form_data.get("merchant_trans_id")
-        amount = float(form_data.get("amount", 0))
-        action = int(form_data.get("action", 0))
-        error = int(form_data.get("error", 0))
-        error_note = form_data.get("error_note", "")
-        sign_time = form_data.get("sign_time")
-        sign_string = form_data.get("sign_string")
-        
-        logger.info(f"Click callback received: trans_id={click_trans_id}, action={action}, error={error}")
-        
-        # Process payment in background
-        from services.payment_service import PaymentService
-        payment_service = PaymentService()
-        
-        background_tasks.add_task(
-            payment_service.process_click_callback,
-            click_trans_id=click_trans_id,
-            service_id=service_id,
-            click_paydoc_id=click_paydoc_id,
-            merchant_trans_id=merchant_trans_id,
-            amount=amount,
-            action=action,
-            error=error,
-            error_note=error_note,
-            sign_time=sign_time,
-            sign_string=sign_string
-        )
-        
-        # Return success response to Click
-        return {
-            "click_trans_id": click_trans_id,
-            "merchant_trans_id": merchant_trans_id,
-            "error": 0,
-            "error_note": "Success"
-        }
-        
-    except Exception as e:
-        logger.error(f"Click callback error: {e}")
-        return {
-            "error": -1,
-            "error_note": "Internal server error"
-        }
+# Click payment callback removed - using manual bank transfer system
 
 @app.websocket("/ws/session/{session_id}")
 async def websocket_session_endpoint(websocket, session_id: str):
@@ -187,6 +133,28 @@ async def websocket_session_endpoint(websocket, session_id: str):
         logger.error(f"WebSocket error for session {session_id}: {e}")
     finally:
         await manager.disconnect(websocket, session_id)
+
+# Background task for cleaning up expired payment sessions
+async def cleanup_expired_payments():
+    """Cleanup expired payment sessions periodically"""
+    import asyncio
+    from services.manual_payment_service import ManualPaymentService
+    
+    payment_service = ManualPaymentService()
+    
+    while True:
+        try:
+            await payment_service.cleanup_expired_sessions()
+            await asyncio.sleep(300)  # Run every 5 minutes
+        except Exception as e:
+            logger.error(f"Error in payment cleanup task: {e}")
+            await asyncio.sleep(60)  # Wait 1 minute on error
+
+# Start background task
+@app.on_event("startup")
+async def start_background_tasks():
+    import asyncio
+    asyncio.create_task(cleanup_expired_payments())
 
 if __name__ == "__main__":
     import uvicorn

@@ -29,3 +29,23 @@ class PaymentTransaction(Base):
     # Relationships
     user = relationship("User", back_populates="payments")
     subscription = relationship("UserSubscription", back_populates="payments")
+
+class ManualPaymentSession(Base):
+    __tablename__ = "manual_payment_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    payment_id = Column(String(100), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    tier_name = Column(String(50), nullable=False)
+    amount_usd = Column(DECIMAL(10, 2), nullable=False)
+    amount_uzs = Column(DECIMAL(12, 0), nullable=False)
+    reference_code = Column(String(20), unique=True, nullable=False)
+    company_number = Column(String(20), nullable=False)
+    status = Column(String(20), default="pending")  # pending, confirmed, expired, cancelled
+    created_at = Column(DateTime, default=func.now())
+    expires_at = Column(DateTime, nullable=False)
+    confirmed_at = Column(DateTime, nullable=True)
+    sms_content = Column(Text, nullable=True)
+    
+    # Relationships
+    user = relationship("User")

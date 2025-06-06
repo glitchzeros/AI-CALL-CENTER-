@@ -243,26 +243,24 @@ class SMSHandler:
     async def _check_payment_confirmation(self, sms_message: SMSMessage, company_number: str) -> bool:
         """Check if SMS is a payment confirmation"""
         try:
-            # Check if there are any sessions waiting for payment confirmation
-            response = await self.http_client.get(
-                f"{self.backend_url}/api/sessions/awaiting-payment/{company_number}"
+            # Send SMS to manual payment service for analysis
+            sms_data = {
+                "sms_content": sms_message.content,
+                "sender_number": sms_message.phone_number,
+                "company_number": company_number
+            }
+            
+            response = await self.http_client.post(
+                f"{self.backend_url}/api/payments/confirm-sms",
+                json=sms_data
             )
             
             if response.status_code == 200:
-                sessions = response.json()
+                result = response.json()
                 
-                for session in sessions:
-                    # Send SMS content to AI for payment analysis
-                    analysis_result = await self._analyze_payment_sms(
-                        sms_message.content, session["id"]
-                    )
-                    
-                    if analysis_result and analysis_result.get("is_payment_confirmation"):
-                        # Process payment confirmation
-                        await self._process_payment_confirmation(
-                            sms_message, session, analysis_result
-                        )
-                        return True
+                if result.get("success") and result.get("confirmed"):
+                    logger.info(f"Payment confirmed via SMS for user {result.get('user_id')}")
+                    return True
             
             return False
             

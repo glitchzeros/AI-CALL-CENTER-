@@ -25,11 +25,11 @@ CREATE TABLE subscription_tiers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert default subscription tiers
+-- Insert default subscription tiers (with UZS pricing)
 INSERT INTO subscription_tiers (name, price_usd, context_limit, description) VALUES
-('Apprentice', 20.00, 4000, 'Context Memory: Up to 4,000 Tokens (Approx. 5 mins)'),
-('Journeyman', 50.00, 32000, 'Context Memory: Up to 32,000 Tokens (Approx. 1 hour)'),
-('Master Scribe', 100.00, -1, 'Context Memory: Full Session History (Unlimited Tokens for Session Duration)');
+('Apprentice', 20.00, 4000, 'Context Memory: Up to 4,000 Tokens (Approx. 5 mins) | 246,000 so''m/oy'),
+('Journeyman', 50.00, 32000, 'Context Memory: Up to 32,000 Tokens (Approx. 1 hour) | 615,000 so''m/oy'),
+('Master Scribe', 100.00, -1, 'Context Memory: Full Session History (Unlimited Tokens) | 1,230,000 so''m/oy');
 
 CREATE TABLE user_subscriptions (
     id SERIAL PRIMARY KEY,
@@ -160,6 +160,23 @@ CREATE TABLE payment_transactions (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Manual payment sessions table for bank transfer payments
+CREATE TABLE manual_payment_sessions (
+    id SERIAL PRIMARY KEY,
+    payment_id VARCHAR(100) UNIQUE NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    tier_name VARCHAR(50) NOT NULL,
+    amount_usd DECIMAL(10,2) NOT NULL,
+    amount_uzs DECIMAL(12,0) NOT NULL,
+    reference_code VARCHAR(20) UNIQUE NOT NULL,
+    company_number VARCHAR(20) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending', -- pending, confirmed, expired, cancelled
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    confirmed_at TIMESTAMP,
+    sms_content TEXT
+);
+
 -- Telegram bot integration
 CREATE TABLE telegram_chats (
     id SERIAL PRIMARY KEY,
@@ -195,6 +212,9 @@ CREATE INDEX idx_statistics_user_date ON call_statistics(user_id, date);
 CREATE INDEX idx_modems_status ON gsm_modems(status);
 CREATE INDEX idx_sms_direction_status ON sms_messages(direction, status);
 CREATE INDEX idx_payments_click_trans_id ON payment_transactions(click_trans_id);
+CREATE INDEX idx_manual_payments_reference ON manual_payment_sessions(reference_code);
+CREATE INDEX idx_manual_payments_user_status ON manual_payment_sessions(user_id, status);
+CREATE INDEX idx_manual_payments_expires ON manual_payment_sessions(expires_at);
 CREATE INDEX idx_dream_journal_category ON scribe_dream_journal(insight_category);
 CREATE INDEX idx_dream_journal_timestamp ON scribe_dream_journal(timestamp);
 

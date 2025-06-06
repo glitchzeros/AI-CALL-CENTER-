@@ -16,7 +16,7 @@ from models.session import CommunicationSession
 from services.gemini_client import GeminiClient
 from services.edge_tts_client import EdgeTTSClient
 from services.sms_service import SMSService
-from services.payment_service import PaymentService
+# Payment service removed - using manual payment system
 
 logger = logging.getLogger("aetherium.workflow")
 
@@ -59,7 +59,7 @@ class WorkflowEngine:
     """Executes workflow invocations and manages session state"""
     
     def __init__(self, db_session, gemini_client: GeminiClient, edge_tts_client: EdgeTTSClient,
-                 sms_service: SMSService, payment_service: PaymentService):
+                 sms_service: SMSService):
         self.db = db_session
         self.gemini_client = gemini_client
         self.edge_tts_client = edge_tts_client
@@ -271,39 +271,90 @@ class WorkflowEngine:
     
     async def _execute_payment_ritual(self, context: ExecutionContext, 
                                     config: Dict[str, Any]) -> InvocationResult:
-        """Execute Payment Ritual invocation"""
+        """Execute Payment Ritual invocation - Manual bank transfer payment"""
         try:
             # Get configuration
-            bank_card = config.get("bank_card", "")
+            tier_name = config.get("tier_name", "Apprentice")
             reassurance_script = config.get("reassurance_script", "")
             
-            # Generate payment instruction
-            instruction_text = "Отправляй сюда свои деньги"  # Manual translation
-            if bank_card:
-                instruction_text += f" на карту {bank_card}"
+            # Import manual payment service
+            from services.manual_payment_service import ManualPaymentService
+            payment_service = ManualPaymentService()
             
-            # Send TTS instruction
-            audio_data = await self.edge_tts_client.synthesize_speech(
-                text=instruction_text,
-                language="ru",
-                voice_settings={"pitch": "-5%", "rate": "-10%"}  # Calmer tone
+            # Get tier pricing
+            tier_prices = {
+                "Apprentice": 20.00,
+                "Journeyman": 50.00,
+                "Master Scribe": 100.00
+            }
+            tier_price = tier_prices.get(tier_name, 20.00)
+            
+            # Initiate payment session
+            payment_result = await payment_service.initiate_consultation_payment(
+                user_id=context.session.user_id,
+                tier_name=tier_name,
+                tier_price_usd=tier_price,
+                company_number=context.session.company_number
             )
             
-            # Set session to awaiting payment confirmation
-            context.variables["awaiting_payment"] = True
-            context.variables["payment_instruction_sent"] = True
-            context.variables["reassurance_script"] = reassurance_script
-            
-            return InvocationResult(
-                success=True,
-                output_data={
-                    "instruction_sent": True,
-                    "audio_data": audio_data,
-                    "instruction_text": instruction_text
-                },
-                requires_wait=True,
-                wait_condition="payment_confirmation"
-            )
+            if payment_result["success"]:
+                # Generate payment instruction in multiple languages
+                bank_info = payment_service.get_company_bank_info()
+                
+                instruction_texts = {
+                    "uz": f"To'lov uchun {payment_result['amount_uzs']:,.0f} so'm miqdorini {bank_info['bank_card']} karta raqamiga o'tkazing. Reference kod: {payment_result['reference_code']}",
+                    "ru": f"Для оплаты переведите {payment_result['amount_uzs']:,.0f} сум на карту {bank_info['bank_card']}. Код ссылки: {payment_result['reference_code']}",
+                    "en": f"For payment, transfer {payment_result['amount_uzs']:,.0f} UZS to card {bank_info['bank_card']}. Reference code: {payment_result['reference_code']}"
+                }
+                
+                # Detect language and select appropriate instruction
+                detected_language = context.variables.get("detected_language", "uz")
+                instruction_text = instruction_texts.get(detected_language, instruction_texts["uz"])
+                
+                # Send TTS instruction
+                audio_data = await self.edge_tts_client.synthesize_speech(
+                    text=instruction_text,
+                    language=detected_language,
+                    voice_settings={"pitch": "-5%", "rate": "-10%"}  # Calmer tone
+                )
+                
+                # Set session to awaiting payment confirmation
+                context.variables["awaiting_payment"] = True
+                context.variables["payment_id"] = payment_result["payment_id"]
+                context.variables["reference_code"] = payment_result["reference_code"]
+                context.variables["reassurance_script"] = reassurance_script
+                context.variables["payment_expires_at"] = payment_result["expires_at"]
+                
+                return InvocationResult(
+                    success=True,
+                    output_data={
+                        "instruction_sent": True,
+                        "audio_data": audio_data,
+                        "instruction_text": instruction_text,
+                        "payment_id": payment_result["payment_id"],
+                        "reference_code": payment_result["reference_code"],
+                        "amount_uzs": payment_result["amount_uzs"]
+                    },
+                    requires_wait=True,
+                    wait_condition="payment_confirmation"
+                )
+            else:
+                # Payment initiation failed
+                error_text = "To'lov tizimida xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring."
+                
+                audio_data = await self.edge_tts_client.synthesize_speech(
+                    text=error_text,
+                    language="uz"
+                )
+                
+                return InvocationResult(
+                    success=False,
+                    output_data={
+                        "audio_data": audio_data,
+                        "error_text": error_text
+                    },
+                    error_message=payment_result.get("error", "Payment initiation failed")
+                )
             
         except Exception as e:
             logger.error(f"Error in payment ritual: {e}")
