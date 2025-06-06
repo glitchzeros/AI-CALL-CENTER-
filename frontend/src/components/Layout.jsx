@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useSound } from '../hooks/useSound'
 import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
+import SupportChat from './SupportChat'
 import { 
   Home, 
   Settings, 
@@ -126,6 +127,9 @@ const Layout = ({ children }) => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {children}
       </main>
+
+      {/* Support Chat - Available on all pages */}
+      <SupportChat />
     </div>
   )
 }

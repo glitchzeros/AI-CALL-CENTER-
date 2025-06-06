@@ -3,6 +3,7 @@ import { useQuery } from 'react-query'
 import Layout from '../components/Layout'
 import { statisticsAPI, sessionsAPI } from '../services/api'
 import { useSound } from '../hooks/useSound'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
 import { 
   Phone, 
   MessageSquare, 
@@ -16,6 +17,7 @@ import {
 
 const DashboardPage = () => {
   const { playBellDing } = useSound()
+  const { t, formatTime } = useTranslation()
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date())
 
   // Fetch dashboard statistics
@@ -74,10 +76,7 @@ const DashboardPage = () => {
   )
 
   const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${hours}h ${minutes}m ${secs}s`
+    return formatTime(seconds)
   }
 
   const formatPercentage = (value) => {
@@ -90,7 +89,7 @@ const DashboardPage = () => {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="loading-quill mb-4"></div>
-            <p className="text-coffee-brown">The Scribe is gathering insights...</p>
+            <p className="text-coffee-brown">{t('dashboard', 'loadingInsights')}</p>
           </div>
         </div>
       </Layout>
@@ -103,14 +102,17 @@ const DashboardPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="heading-primary">The Scribe's Dashboard</h1>
+            <h1 className="heading-primary">{t('dashboard', 'title')}</h1>
             <p className="text-coffee-sienna">
-              Real-time insights into your AI communication platform
+              {t('dashboard', 'subtitle')}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-coffee-brown">Last updated</p>
-            <p className="text-sm text-coffee-sienna">{lastUpdateTime.toLocaleTimeString()}</p>
+          <div className="flex items-center space-x-4">
+            <LanguageSelector />
+            <div className="text-right">
+              <p className="text-sm text-coffee-brown">{t('dashboard', 'lastUpdated')}</p>
+              <p className="text-sm text-coffee-sienna">{lastUpdateTime.toLocaleTimeString()}</p>
+            </div>
           </div>
         </div>
 
@@ -121,10 +123,10 @@ const DashboardPage = () => {
               <Activity className="text-coffee-green animate-pulse" size={24} />
               <div>
                 <h3 className="font-semibold text-coffee-brown">
-                  {activeSessions.active_count} Active Session{activeSessions.active_count !== 1 ? 's' : ''}
+                  {activeSessions.active_count} {t('dashboard', 'activeSessions')}
                 </h3>
                 <p className="text-coffee-sienna text-sm">
-                  Your Scribe is currently handling live conversations
+                  {t('dashboard', 'activeSessionsDesc')}
                 </p>
               </div>
             </div>
@@ -134,25 +136,25 @@ const DashboardPage = () => {
         {/* Main Statistics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Calls Handled"
+            title={t('dashboard', 'totalCalls')}
             value={stats?.total_calls?.toLocaleString() || '0'}
-            subtitle="All-time conversations"
+            subtitle={t('dashboard', 'allTimeConversations')}
             icon={Phone}
             color="coffee-brown"
           />
           
           <StatCard
-            title="Total Duration"
+            title={t('dashboard', 'totalDuration')}
             value={formatDuration(stats?.total_duration_seconds || 0)}
-            subtitle="Cumulative talk time"
+            subtitle={t('dashboard', 'cumulativeTalkTime')}
             icon={Clock}
             color="coffee-sienna"
           />
           
           <StatCard
-            title="Positive Interactions"
+            title={t('dashboard', 'positiveInteractions')}
             value={formatPercentage(stats?.positive_percentage || 0)}
-            subtitle={`${stats?.positive_interactions || 0} successful outcomes`}
+            subtitle={`${stats?.positive_interactions || 0} ${t('dashboard', 'successfulOutcomes')}`}
             icon={TrendingUp}
             trend="up"
             trendValue={stats?.positive_percentage || 0}
@@ -160,9 +162,9 @@ const DashboardPage = () => {
           />
           
           <StatCard
-            title="Average Call Duration"
+            title={t('dashboard', 'averageCallDuration')}
             value={`${(stats?.average_call_duration || 0).toFixed(1)}s`}
-            subtitle="Per conversation"
+            subtitle={t('dashboard', 'perConversation')}
             icon={BarChart3}
             color="coffee-brown"
           />
@@ -173,31 +175,31 @@ const DashboardPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 24-Hour Summary */}
             <div className="paper-panel">
-              <h2 className="heading-secondary mb-4">Last 24 Hours</h2>
+              <h2 className="heading-secondary mb-4">{t('dashboard', 'last24Hours')}</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-coffee-brown">Sessions</span>
+                  <span className="text-coffee-brown">{t('dashboard', 'sessions')}</span>
                   <span className="font-semibold text-coffee-brown">
                     {recentSummary.total_sessions}
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-coffee-brown">Success Rate</span>
+                  <span className="text-coffee-brown">{t('dashboard', 'successRate')}</span>
                   <span className="font-semibold text-green-600">
                     {recentSummary.success_rate.toFixed(1)}%
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-coffee-brown">Total Duration</span>
+                  <span className="text-coffee-brown">{t('dashboard', 'totalDuration')}</span>
                   <span className="font-semibold text-coffee-brown">
                     {formatDuration(recentSummary.total_duration_seconds)}
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-coffee-brown">Avg Duration</span>
+                  <span className="text-coffee-brown">{t('dashboard', 'avgDuration')}</span>
                   <span className="font-semibold text-coffee-brown">
                     {recentSummary.average_duration_seconds}s
                   </span>
@@ -207,7 +209,7 @@ const DashboardPage = () => {
 
             {/* Session Types Breakdown */}
             <div className="paper-panel">
-              <h2 className="heading-secondary mb-4">Session Types</h2>
+              <h2 className="heading-secondary mb-4">{t('dashboard', 'sessionTypes')}</h2>
               <div className="space-y-3">
                 {Object.entries(recentSummary.sessions_by_type || {}).map(([type, count]) => (
                   <div key={type} className="flex justify-between items-center">
@@ -215,7 +217,7 @@ const DashboardPage = () => {
                       {type === 'voice' && <Phone size={16} className="text-coffee-brown" />}
                       {type === 'sms' && <MessageSquare size={16} className="text-coffee-brown" />}
                       {type === 'telegram' && <Users size={16} className="text-coffee-brown" />}
-                      <span className="text-coffee-brown capitalize">{type}</span>
+                      <span className="text-coffee-brown capitalize">{t('dashboard', type)}</span>
                     </div>
                     <span className="font-semibold text-coffee-brown">{count}</span>
                   </div>
@@ -227,14 +229,14 @@ const DashboardPage = () => {
 
         {/* Quick Actions */}
         <div className="paper-panel">
-          <h2 className="heading-secondary mb-4">Quick Actions</h2>
+          <h2 className="heading-secondary mb-4">{t('dashboard', 'quickActions')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => window.location.href = '/invocation-editor'}
               className="btn-primary flex items-center justify-center space-x-2"
             >
               <Activity size={20} />
-              <span>Edit Workflows</span>
+              <span>{t('dashboard', 'editWorkflows')}</span>
             </button>
             
             <button
@@ -242,7 +244,7 @@ const DashboardPage = () => {
               className="btn-secondary flex items-center justify-center space-x-2"
             >
               <MessageSquare size={20} />
-              <span>View Sessions</span>
+              <span>{t('dashboard', 'viewSessions')}</span>
             </button>
             
             <button
@@ -250,31 +252,31 @@ const DashboardPage = () => {
               className="btn-secondary flex items-center justify-center space-x-2"
             >
               <BarChart3 size={20} />
-              <span>Detailed Analytics</span>
+              <span>{t('dashboard', 'detailedAnalytics')}</span>
             </button>
           </div>
         </div>
 
         {/* System Status */}
         <div className="paper-panel coffee-stain">
-          <h2 className="heading-secondary mb-4">System Status</h2>
+          <h2 className="heading-secondary mb-4">{t('dashboard', 'systemStatus')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-              <p className="text-sm text-coffee-brown font-medium">AI Scribe</p>
-              <p className="text-xs text-coffee-sienna">Online</p>
+              <p className="text-sm text-coffee-brown font-medium">{t('dashboard', 'aiScribe')}</p>
+              <p className="text-xs text-coffee-sienna">{t('dashboard', 'online')}</p>
             </div>
             
             <div className="text-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-              <p className="text-sm text-coffee-brown font-medium">Voice System</p>
-              <p className="text-xs text-coffee-sienna">Ready</p>
+              <p className="text-sm text-coffee-brown font-medium">{t('dashboard', 'voiceSystem')}</p>
+              <p className="text-xs text-coffee-sienna">{t('dashboard', 'ready')}</p>
             </div>
             
             <div className="text-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-              <p className="text-sm text-coffee-brown font-medium">Messaging</p>
-              <p className="text-xs text-coffee-sienna">Active</p>
+              <p className="text-sm text-coffee-brown font-medium">{t('dashboard', 'messaging')}</p>
+              <p className="text-xs text-coffee-sienna">{t('dashboard', 'active')}</p>
             </div>
           </div>
         </div>

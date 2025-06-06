@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useQuery } from 'react-query'
 import Layout from '../components/Layout'
 import { sessionsAPI } from '../services/api'
+import { useTranslation } from '../hooks/useTranslation'
+import LanguageSelector from '../components/LanguageSelector'
 import { 
   Phone, 
   MessageSquare, 
@@ -18,6 +20,7 @@ import {
 import { format } from 'date-fns'
 
 const SessionsPage = () => {
+  const { t } = useTranslation()
   const [selectedSession, setSelectedSession] = useState(null)
   const [expandedSessions, setExpandedSessions] = useState(new Set())
   const [filters, setFilters] = useState({
@@ -196,7 +199,7 @@ const SessionsPage = () => {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="loading-quill mb-4"></div>
-            <p className="text-coffee-brown">The Scribe is retrieving conversation records...</p>
+            <p className="text-coffee-brown">{t('sessions', 'loadingSessions')}</p>
           </div>
         </div>
       </Layout>
@@ -209,16 +212,19 @@ const SessionsPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="heading-primary">Session History</h1>
+            <h1 className="heading-primary">{t('sessions', 'title')}</h1>
             <p className="text-coffee-sienna">
-              Complete record of all Scribe conversations and interactions
+              {t('sessions', 'subtitle')}
             </p>
           </div>
           
-          <button className="btn-secondary flex items-center space-x-2">
-            <Download size={16} />
-            <span>Export</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            <LanguageSelector />
+            <button className="btn-secondary flex items-center space-x-2">
+              <Download size={16} />
+              <span>{t('sessions', 'exportSessions')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

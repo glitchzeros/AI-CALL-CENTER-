@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useQuery } from 'react-query'
 import Layout from '../components/Layout'
 import { statisticsAPI } from '../services/api'
+import { useTranslation } from '../hooks/useTranslation'
+import LanguageSelector from '../components/LanguageSelector'
 import {
   LineChart,
   Line,
@@ -31,6 +33,7 @@ import {
 } from 'lucide-react'
 
 const StatisticsPage = () => {
+  const { t } = useTranslation()
   const [selectedPeriod, setSelectedPeriod] = useState(30)
 
   // Fetch statistics data
@@ -124,11 +127,11 @@ const StatisticsPage = () => {
         
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-coffee-sienna">Current Period</span>
+            <span className="text-coffee-sienna">{t('statistics', 'currentPeriod')}</span>
             <span className="font-semibold text-coffee-brown">{format(current)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-coffee-sienna">Previous Period</span>
+            <span className="text-coffee-sienna">{t('statistics', 'previousPeriod')}</span>
             <span className="text-coffee-brown">{format(previous)}</span>
           </div>
         </div>
@@ -142,7 +145,7 @@ const StatisticsPage = () => {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="loading-quill mb-4"></div>
-            <p className="text-coffee-brown">The Scribe is analyzing the data...</p>
+            <p className="text-coffee-brown">{t('statistics', 'loadingAnalysis')}</p>
           </div>
         </div>
       </Layout>
@@ -159,22 +162,23 @@ const StatisticsPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="heading-primary">The Scribe's Analytics</h1>
+            <h1 className="heading-primary">{t('statistics', 'title')}</h1>
             <p className="text-coffee-sienna">
-              Deep insights into your AI communication performance
+              {t('statistics', 'subtitle')}
             </p>
           </div>
           
           <div className="flex items-center space-x-4">
-            <label className="text-coffee-brown font-medium">Period:</label>
+            <LanguageSelector />
+            <label className="text-coffee-brown font-medium">{t('statistics', 'period')}:</label>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(Number(e.target.value))}
               className="input-paper"
             >
-              <option value={7}>Last 7 days</option>
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
+              <option value={7}>{t('statistics', 'last7Days')}</option>
+              <option value={30}>{t('statistics', 'last30Days')}</option>
+              <option value={90}>{t('statistics', 'last90Days')}</option>
             </select>
           </div>
         </div>
@@ -183,19 +187,19 @@ const StatisticsPage = () => {
         {trends && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <TrendCard
-              title="Total Calls"
+              title={t('statistics', 'totalCalls')}
               current={trends.current_period.calls}
               previous={trends.previous_period.calls}
               icon={Phone}
             />
             <TrendCard
-              title="Positive Interactions"
+              title={t('statistics', 'positiveInteractions')}
               current={trends.current_period.positive_interactions}
               previous={trends.previous_period.positive_interactions}
               icon={Target}
             />
             <TrendCard
-              title="Total Duration"
+              title={t('statistics', 'totalDuration')}
               current={trends.current_period.total_duration}
               previous={trends.previous_period.total_duration}
               icon={Clock}
@@ -206,7 +210,7 @@ const StatisticsPage = () => {
 
         {/* Daily Performance Chart */}
         <div className="paper-panel">
-          <h2 className="heading-secondary mb-4">Daily Performance Trends</h2>
+          <h2 className="heading-secondary mb-4">{t('statistics', 'dailyPerformance')}</h2>
           <div className="chart-paper h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyData}>
@@ -255,7 +259,7 @@ const StatisticsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Hourly Distribution */}
           <div className="paper-panel">
-            <h2 className="heading-secondary mb-4">Hourly Activity Distribution</h2>
+            <h2 className="heading-secondary mb-4">{t('statistics', 'hourlyActivity')}</h2>
             <div className="chart-paper h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={hourlyData}>
@@ -285,7 +289,7 @@ const StatisticsPage = () => {
 
           {/* Outcome Analysis */}
           <div className="paper-panel">
-            <h2 className="heading-secondary mb-4">Outcome Distribution</h2>
+            <h2 className="heading-secondary mb-4">{t('statistics', 'outcomeDistribution')}</h2>
             <div className="chart-paper h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -315,7 +319,7 @@ const StatisticsPage = () => {
 
         {/* Duration Analysis */}
         <div className="paper-panel">
-          <h2 className="heading-secondary mb-4">Call Duration Analysis</h2>
+          <h2 className="heading-secondary mb-4">{t('statistics', 'durationAnalysis')}</h2>
           <div className="chart-paper h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dailyData}>
@@ -353,11 +357,11 @@ const StatisticsPage = () => {
 
         {/* Performance Insights */}
         <div className="paper-panel coffee-stain">
-          <h2 className="heading-secondary mb-4">Performance Insights</h2>
+          <h2 className="heading-secondary mb-4">{t('statistics', 'performanceInsights')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="text-center">
               <Activity className="mx-auto mb-2 text-coffee-brown" size={32} />
-              <h3 className="font-semibold text-coffee-brown">Peak Hours</h3>
+              <h3 className="font-semibold text-coffee-brown">{t('statistics', 'peakHours')}</h3>
               <p className="text-sm text-coffee-sienna">
                 {hourlyData.length > 0 && 
                   hourlyData.reduce((max, curr) => curr.calls > max.calls ? curr : max, hourlyData[0])?.hour
@@ -367,7 +371,7 @@ const StatisticsPage = () => {
             
             <div className="text-center">
               <Target className="mx-auto mb-2 text-coffee-brown" size={32} />
-              <h3 className="font-semibold text-coffee-brown">Success Rate</h3>
+              <h3 className="font-semibold text-coffee-brown">{t('statistics', 'successRate')}</h3>
               <p className="text-sm text-coffee-sienna">
                 {dailyData.length > 0 && 
                   (dailyData.reduce((sum, day) => sum + day.successRate, 0) / dailyData.length).toFixed(1)
@@ -377,7 +381,7 @@ const StatisticsPage = () => {
             
             <div className="text-center">
               <Clock className="mx-auto mb-2 text-coffee-brown" size={32} />
-              <h3 className="font-semibold text-coffee-brown">Avg Duration</h3>
+              <h3 className="font-semibold text-coffee-brown">{t('statistics', 'avgDuration')}</h3>
               <p className="text-sm text-coffee-sienna">
                 {dailyData.length > 0 && 
                   Math.round(dailyData.reduce((sum, day) => sum + day.duration, 0) / dailyData.length)
@@ -387,7 +391,7 @@ const StatisticsPage = () => {
             
             <div className="text-center">
               <MessageSquare className="mx-auto mb-2 text-coffee-brown" size={32} />
-              <h3 className="font-semibold text-coffee-brown">Total Sessions</h3>
+              <h3 className="font-semibold text-coffee-brown">{t('statistics', 'totalSessions')}</h3>
               <p className="text-sm text-coffee-sienna">
                 {dailyData.reduce((sum, day) => sum + day.calls, 0).toLocaleString()}
               </p>

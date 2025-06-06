@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import Layout from '../components/Layout'
 import { subscriptionsAPI, paymentsAPI, usersAPI } from '../services/api'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
 import toast from 'react-hot-toast'
 import {
   Crown,
@@ -20,6 +21,7 @@ import {
 
 const SubscriptionPage = () => {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [selectedTier, setSelectedTier] = useState(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
@@ -128,7 +130,7 @@ const SubscriptionPage = () => {
         {isRecommended && (
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
             <span className="bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-bold">
-              Most Popular
+{t('subscription', 'mostPopular')}
             </span>
           </div>
         )}
@@ -136,7 +138,7 @@ const SubscriptionPage = () => {
         {isCurrentTier && (
           <div className="absolute -top-3 right-4">
             <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-              Current Plan
+{t('subscription', 'currentPlan')}
             </span>
           </div>
         )}
@@ -160,7 +162,7 @@ const SubscriptionPage = () => {
           <div className="flex items-start space-x-3">
             <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-coffee-brown">Context Memory</p>
+              <p className="font-medium text-coffee-brown">{t('subscription', 'contextMemory')}</p>
               <p className="text-sm text-coffee-sienna">{formatContextLimit(tier.context_limit)}</p>
             </div>
           </div>
@@ -168,24 +170,24 @@ const SubscriptionPage = () => {
           <div className="flex items-start space-x-3">
             <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-coffee-brown">Multi-Channel Support</p>
-              <p className="text-sm text-coffee-sienna">Voice, SMS, and Telegram integration</p>
+              <p className="font-medium text-coffee-brown">{t('subscription', 'multiChannelSupport')}</p>
+              <p className="text-sm text-coffee-sienna">{t('subscription', 'multiChannelDesc')}</p>
             </div>
           </div>
 
           <div className="flex items-start space-x-3">
             <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-coffee-brown">Visual Workflow Builder</p>
-              <p className="text-sm text-coffee-sienna">Drag-and-drop Invocation Editor</p>
+              <p className="font-medium text-coffee-brown">{t('subscription', 'visualWorkflowBuilder')}</p>
+              <p className="text-sm text-coffee-sienna">{t('subscription', 'visualWorkflowDesc')}</p>
             </div>
           </div>
 
           <div className="flex items-start space-x-3">
             <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-coffee-brown">Real-time Analytics</p>
-              <p className="text-sm text-coffee-sienna">Comprehensive performance insights</p>
+              <p className="font-medium text-coffee-brown">{t('subscription', 'realtimeAnalytics')}</p>
+              <p className="text-sm text-coffee-sienna">{t('subscription', 'realtimeAnalyticsDesc')}</p>
             </div>
           </div>
 
@@ -194,16 +196,16 @@ const SubscriptionPage = () => {
               <div className="flex items-start space-x-3">
                 <Crown size={20} className="text-yellow-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-coffee-brown">Priority Support</p>
-                  <p className="text-sm text-coffee-sienna">Dedicated assistance channel</p>
+                  <p className="font-medium text-coffee-brown">{t('subscription', 'prioritySupport')}</p>
+                  <p className="text-sm text-coffee-sienna">{t('subscription', 'prioritySupportDesc')}</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-3">
                 <Crown size={20} className="text-yellow-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-coffee-brown">Advanced Features</p>
-                  <p className="text-sm text-coffee-sienna">Early access to new capabilities</p>
+                  <p className="font-medium text-coffee-brown">{t('subscription', 'advancedFeatures')}</p>
+                  <p className="text-sm text-coffee-sienna">{t('subscription', 'advancedFeaturesDesc')}</p>
                 </div>
               </div>
             </>
@@ -226,12 +228,12 @@ const SubscriptionPage = () => {
           ) : isCurrentTier ? (
             <>
               <Check size={20} />
-              <span>Current Plan</span>
+              <span>{t('subscription', 'currentPlan')}</span>
             </>
           ) : (
             <>
               <CreditCard size={20} />
-              <span>Subscribe Now</span>
+              <span>{t('subscription', 'subscribeNow')}</span>
               <ArrowRight size={16} />
             </>
           )}
@@ -246,7 +248,7 @@ const SubscriptionPage = () => {
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="loading-quill mb-4"></div>
-            <p className="text-coffee-brown">The Scribe is preparing subscription options...</p>
+            <p className="text-coffee-brown">{t('subscription', 'loading')}</p>
           </div>
         </div>
       </Layout>
@@ -258,10 +260,12 @@ const SubscriptionPage = () => {
       <div className="space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="heading-primary text-3xl mb-4">Choose Your Scribe's Power</h1>
+          <div className="flex justify-center mb-4">
+            <LanguageSelector />
+          </div>
+          <h1 className="heading-primary text-3xl mb-4">{t('subscription', 'title')}</h1>
           <p className="text-coffee-sienna text-lg max-w-2xl mx-auto">
-            Select the subscription tier that best fits your communication needs. 
-            Each tier offers different context memory capabilities for your AI conversations.
+            {t('subscription', 'subtitle')}
           </p>
         </div>
 
@@ -274,12 +278,12 @@ const SubscriptionPage = () => {
                   <Shield size={24} className="text-coffee-green" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-coffee-brown">Active Subscription</h3>
+                  <h3 className="font-semibold text-coffee-brown">{t('subscription', 'currentPlan')}</h3>
                   <p className="text-coffee-sienna">
                     {profile.subscription.tier_name} - ${profile.subscription.price_usd}/month
                   </p>
                   <p className="text-sm text-coffee-sienna">
-                    Next billing: {new Date(profile.subscription.expires_at).toLocaleDateString()}
+                    {t('subscription', 'nextBilling')}: {new Date(profile.subscription.expires_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -287,7 +291,7 @@ const SubscriptionPage = () => {
               <div className="text-right">
                 <div className="flex items-center space-x-2 text-green-600">
                   <Check size={20} />
-                  <span className="font-medium">Active</span>
+                  <span className="font-medium">{t('subscription', 'active')}</span>
                 </div>
               </div>
             </div>

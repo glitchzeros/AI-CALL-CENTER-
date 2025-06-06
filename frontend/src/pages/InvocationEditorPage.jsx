@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import Layout from '../components/Layout'
 import { workflowsAPI } from '../services/api'
 import { useSound } from '../hooks/useSound'
+import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
 import toast from 'react-hot-toast'
 import {
   Save,
@@ -23,6 +24,7 @@ import {
 
 const InvocationEditorPage = () => {
   const { playPaperSlide, playPenScratch, playBookClose, playPaperUnfold } = useSound()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   
   // State management
@@ -267,13 +269,14 @@ const InvocationEditorPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-coffee-khaki border-b-2 border-coffee-sienna">
           <div className="flex items-center space-x-4">
-            <h1 className="heading-primary text-xl">The Invocation Editor</h1>
+            <LanguageSelector />
+            <h1 className="heading-primary text-xl">{t('invocationEditor', 'title')}</h1>
             <input
               type="text"
               value={workflowName}
               onChange={(e) => setWorkflowName(e.target.value)}
               className="input-paper px-3 py-1 text-lg font-medium"
-              placeholder="Workflow name..."
+              placeholder={t('invocationEditor', 'workflowNamePlaceholder')}
             />
           </div>
           
@@ -283,7 +286,7 @@ const InvocationEditorPage = () => {
               className="btn-secondary flex items-center space-x-2"
             >
               <Plus size={16} />
-              <span>New</span>
+              <span>{t('invocationEditor', 'new')}</span>
             </button>
             
             <button
@@ -296,7 +299,7 @@ const InvocationEditorPage = () => {
               ) : (
                 <Save size={16} />
               )}
-              <span>Save</span>
+              <span>{t('invocationEditor', 'save')}</span>
             </button>
           </div>
         </div>
