@@ -1,18 +1,52 @@
-# Aetherium - AI Call Center Platform
+# 🏛️ Aetherium - Advanced AI Communication Platform
 
 **"Where AI Scribes dwell and conversations flow like ink upon parchment"**
 
-Aetherium is a comprehensive AI-powered call center platform that enables businesses to deploy autonomous AI agents (called "Scribes") capable of conducting natural, context-aware conversations across multiple channels while executing complex automated workflows.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+
+Aetherium is a comprehensive AI-powered communication platform that enables businesses to deploy autonomous AI agents (called "Scribes") capable of conducting natural, context-aware conversations across multiple channels while executing complex automated workflows. Now featuring an advanced admin dashboard for complete system management.
+
+## 🚀 Quick Start
+
+### One-Command Setup
+```bash
+./start-aetherium.sh
+```
+
+That's it! The script will handle everything automatically:
+- ✅ Check dependencies
+- ✅ Build all Docker images  
+- ✅ Start services in correct order
+- ✅ Wait for services to be ready
+- ✅ Display service status and URLs
+
+### Access Points
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Frontend** | http://localhost:12000 | Main web interface |
+| **Backend API** | http://localhost:8000 | REST API endpoints |
+| **API Documentation** | http://localhost:8000/docs | Interactive API docs |
 
 ## 🌟 Features
 
-### Core Capabilities
+### 🎯 Core Capabilities
 - **40 Concurrent Sessions**: Handle up to 40 simultaneous voice calls, SMS, and Telegram interactions
 - **Multimodal AI**: Powered by Google's Gemini 2.0 Flash for advanced audio and text processing
 - **Visual Workflow Builder**: Intuitive drag-and-drop "Invocation Editor" for creating AI behaviors
 - **Multi-Channel Communication**: Voice calls, SMS messaging, and Telegram integration
 - **Real-time Analytics**: Comprehensive statistics and conversation monitoring
 - **Coffee Paper Aesthetic**: Unique, immersive UI design inspired by a scribe's workspace
+
+### 🛠️ Admin Dashboard (NEW!)
+- **API Key Management**: Dynamic allocation and rotation of Gemini API keys
+- **GSM Modem Control**: Automatic detection and assignment of GSM modems
+- **Company Configuration**: Custom system prompts and AI personalities per company
+- **Subscription Management**: Client API key assignments with automatic renewal
+- **Real-time Monitoring**: System health, usage statistics, and performance metrics
+- **Auto-Configuration**: Smart environment setup with demo/production mode switching
 
 ### Technical Architecture
 - **GSM Modem Integration**: Direct hardware control of SIM800C modems with dual USB connections
@@ -41,29 +75,41 @@ Aetherium is a comprehensive AI-powered call center platform that enables busine
 ### Prerequisites
 
 1. **Hardware Requirements**:
-   - Server with 64GB RAM
-   - NVIDIA Tesla V100 GPU (16GB or 32GB VRAM)
-   - 15 PCI 1x slots for USB expansion
-   - Up to 40 SIM800C GSM modems with dual USB connections
+   - Server with 64GB RAM (recommended for full deployment)
+   - NVIDIA Tesla V100 GPU (16GB or 32GB VRAM) - optional for enhanced AI processing
+   - 15 PCI 1x slots for USB expansion (for full GSM modem setup)
+   - Up to 40 SIM800C GSM modems with dual USB connections (optional)
 
 2. **Software Requirements**:
    - Docker and Docker Compose
    - Linux operating system (Ubuntu Server LTS recommended)
    - Git
 
-### Installation
+### 🎯 Automated Installation (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/Asilbekov/Ozodbek-.git
+cd Ozodbek-
+
+# Run the automated setup script
+./scripts/docker_setup.sh
+
+# For development mode
+./scripts/docker_setup.sh dev
+```
+
+### 🔧 Manual Installation
 
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
-   cd Ai-call-center-agent-
+   git clone https://github.com/Asilbekov/Ozodbek-.git
+   cd Ozodbek-
    ```
 
-2. **Configure Environment**:
+2. **Setup Environment**:
    ```bash
-   cp .env.example .env
-   # Edit .env with your actual API keys and configuration
-   nano .env
+   python3 scripts/setup_environment.py
    ```
 
 3. **Deploy the Platform**:
@@ -71,7 +117,12 @@ Aetherium is a comprehensive AI-powered call center platform that enables busine
    docker-compose up -d
    ```
 
-That's it! The entire Aetherium platform will be operational.
+### 🌐 Access Points
+
+After successful setup:
+- **🎛️ Admin Dashboard**: http://localhost:12000
+- **🔧 Backend API**: http://localhost:8000
+- **📚 API Documentation**: http://localhost:8000/docs
 
 ## 🔧 Configuration
 

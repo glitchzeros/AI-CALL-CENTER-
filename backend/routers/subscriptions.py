@@ -10,7 +10,8 @@ from pydantic import BaseModel
 from typing import List
 
 from database.connection import get_database
-from models.user import User, SubscriptionTier
+from models.user import User
+from models.subscription import SubscriptionTier
 from routers.auth import get_current_user
 from services.manual_payment_service import ManualPaymentService
 

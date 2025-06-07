@@ -17,4 +17,4 @@ class ScribeDreamJournal(Base):
     related_invocations = Column(ARRAY(String))  # Array of relevant Invocation types
     anonymized_example_snippet = Column(Text)
     severity_level = Column(String(10), default="low")  # low, medium, high
-    metadata = Column(JSON)  # Additional structured insights
+    entry_metadata = Column(JSON)  # Additional structured insights

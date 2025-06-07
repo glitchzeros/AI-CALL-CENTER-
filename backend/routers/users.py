@@ -10,7 +10,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 from database.connection import get_database
-from models.user import User, UserSubscription, SubscriptionTier
+from models.user import User
+from models.subscription import UserSubscription, SubscriptionTier
 from routers.auth import get_current_user
 
 router = APIRouter()

@@ -5,28 +5,64 @@ services:
     image: postgres:15-alpine
     container_name: aetherium_database
     environment:
-      POSTGRES_DB: aetherium
-      POSTGRES_USER: aetherium_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-aetherium_secure_pass_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-aetherium_demo}
+      POSTGRES_USER: ${POSTGRES_USER:-demo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo_password_123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend/database/migrations:/docker-entrypoint-initdb.d/migrations
+      - postgres_backups:/backups
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aetherium_user -d aetherium"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demo_user} -d ${POSTGRES_DB:-aetherium_demo}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    networks:
+      - aetherium_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: aetherium_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aetherium_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
 
   backend-api:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=${ENVIRONMENT:-production}
     container_name: aetherium_backend
     environment:
-      - DATABASE_URL=postgresql://aetherium_user:${DB_PASSWORD:-aetherium_secure_pass_2024}@database:5432/aetherium
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://aetherium_user:aetherium_secure_pass_2024@database:5432/aetherium}
+      - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - COMPANY_BANK_CARD=${COMPANY_BANK_CARD}
       - COMPANY_BANK_NAME=${COMPANY_BANK_NAME}
@@ -34,26 +70,63 @@ services:
       - COMPANY_BANK_PHONE=${COMPANY_BANK_PHONE}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-aetherium_jwt_secret_2024}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-aetherium_encryption_key_2024}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - MAX_WORKERS=${MAX_WORKERS:-4}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./backend/logs:/app/logs
       - ./backend/uploads:/app/uploads
+      - backend_static:/app/static
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - aetherium_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
 
   web-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=${ENVIRONMENT:-production}
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+        - VITE_WS_BASE_URL=${VITE_WS_BASE_URL:-ws://localhost:8000}
     container_name: aetherium_frontend
     ports:
-      - "12000:80"
+      - "${FRONTEND_PORT:-12000}:80"
     depends_on:
-      - backend-api
+      backend-api:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - aetherium_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   modem-manager:
     build:
@@ -102,7 +175,21 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  postgres_backups:
+    driver: local
+  redis_data:
+    driver: local
+  backend_static:
+    driver: local
+  modem_logs:
+    driver: local
+  telegram_logs:
+    driver: local
 
 networks:
-  default:
+  aetherium_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

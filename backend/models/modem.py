@@ -38,7 +38,7 @@ class SMSMessage(Base):
     session_id = Column(Integer, ForeignKey("communication_sessions.id"))
     sent_at = Column(DateTime)
     received_at = Column(DateTime, default=func.now())
-    metadata = Column(JSON)
+    modem_metadata = Column(JSON)
     
     # Relationships
     modem = relationship("GSMModem", back_populates="sms_messages")

@@ -40,7 +40,7 @@ class SessionMessage(Base):
     content = Column(Text)
     audio_file_path = Column(String(500))
     timestamp = Column(DateTime, default=func.now())
-    metadata = Column(JSON)  # Additional data like audio features, language detected, etc.
+    session_metadata = Column(JSON)  # Additional data like audio features, language detected, etc.
     
     # Relationships
     session = relationship("CommunicationSession", back_populates="messages")
