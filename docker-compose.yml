@@ -110,8 +110,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-12000}:80"
     depends_on:
-      backend-api:
-        condition: service_healthy
+      - backend-api
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]

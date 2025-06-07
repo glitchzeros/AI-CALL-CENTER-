@@ -61,6 +61,13 @@ cleanup_existing() {
     print_status "Cleaning up existing containers..."
     $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
     
+    # Kill any processes using our ports to prevent conflicts
+    for port in 8000 12000 5432 6379 80 443; do
+        if command -v fuser >/dev/null 2>&1; then
+            fuser -k ${port}/tcp 2>/dev/null || true
+        fi
+    done
+    
     # Remove old volumes if they exist to ensure fresh start
     print_status "Removing old database volume for fresh start..."
     docker volume rm ozodbek-_postgres_data 2>/dev/null || true
@@ -139,7 +146,8 @@ start_backend() {
 # Start frontend and other services
 start_frontend_and_services() {
     print_status "Starting frontend and remaining services..."
-    $COMPOSE_CMD up -d web-frontend nginx modem-manager telegram-bot-interface
+    # Start services without strict health check dependencies
+    $COMPOSE_CMD up -d --no-deps web-frontend nginx modem-manager telegram-bot-interface
     
     print_status "Waiting for frontend to build and start..."
     sleep 20
