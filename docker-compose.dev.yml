@@ -1,0 +1,95 @@
+# Development Docker Compose Configuration
+version: '3.8'
+
+services:
+  database:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: dev_password_123
+    volumes:
+      - ./backend/database/dev_data:/var/lib/postgresql/data
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+      target: development
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - DATABASE_URL=postgresql://aetherium_user:dev_password_123@database:5432/aetherium
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ORIGINS=http://localhost:12000,http://localhost:3000
+      - RELOAD=true
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/logs:/app/logs
+    ports:
+      - "8000:8000"
+      - "8001:8001"  # Debug port
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]
+
+  web-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+      target: development
+    environment:
+      - VITE_ENVIRONMENT=development
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_WS_BASE_URL=ws://localhost:8000
+      - VITE_DEBUG_MODE=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "12000:12000"
+      - "12001:12001"  # HMR port
+    command: ["npm", "run", "dev"]
+
+  # Development tools
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: aetherium_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@aetherium.dev
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - database
+    networks:
+      - aetherium_network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: aetherium_redis_commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - aetherium_network
+
+  # Mail catcher for development
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: aetherium_mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - aetherium_network
+
+networks:
+  aetherium_network:
+    driver: bridge

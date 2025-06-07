@@ -10,14 +10,24 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
 import os
+import asyncio
 from datetime import datetime
+from pathlib import Path
 
 from database.connection import get_database, init_database
-from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support
+from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support, admin
 from services.dream_journal import DreamJournalService
 from services.gemini_client import GeminiClient
 from services.edge_tts_client import EdgeTTSClient
+from services.scheduler import start_admin_scheduler, stop_admin_scheduler
 from utils.logging_config import setup_logging
+from utils.middleware import (
+    RequestLoggingMiddleware,
+    ErrorHandlingMiddleware,
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    DatabaseConnectionMiddleware
+)
 
 # Setup logging
 setup_logging()
@@ -36,6 +46,7 @@ async def lifespan(app: FastAPI):
     
     # Start background services
     await dream_journal_service.start_nightly_analysis()
+    await start_admin_scheduler()
     
     logger.info("✨ Aetherium Backend Ready - The Scribe is Listening")
     
@@ -44,16 +55,27 @@ async def lifespan(app: FastAPI):
     # Cleanup
     logger.info("🌙 Aetherium Backend Shutting Down - The Scribe Rests")
     await dream_journal_service.stop()
+    await stop_admin_scheduler()
 
 # Create FastAPI app
 app = FastAPI(
     title="Aetherium API",
     description="The Scribe's Central Intelligence - AI Call Center Platform",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/docs" if os.getenv("ENVIRONMENT", "development") != "production" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT", "development") != "production" else None,
+    openapi_url="/openapi.json" if os.getenv("ENVIRONMENT", "development") != "production" else None,
 )
 
-# CORS middleware
+# Add custom middleware (order matters!)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=120)  # 2 requests per second
+app.add_middleware(DatabaseConnectionMiddleware)
+
+# CORS middleware (should be last)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Configure appropriately for production
@@ -64,6 +86,10 @@ app.add_middleware(
 
 # Security
 security = HTTPBearer()
+
+# Create static directory if it doesn't exist
+static_dir = Path("static")
+static_dir.mkdir(exist_ok=True)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -78,6 +104,7 @@ app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistic
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(telegram_integration.router, prefix="/api/telegram", tags=["Telegram"])
 app.include_router(support.router, tags=["Support"])
+app.include_router(admin.router, tags=["Admin"])
 
 @app.get("/")
 async def root():
