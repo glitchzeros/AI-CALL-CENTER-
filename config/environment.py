@@ -24,7 +24,7 @@ class EnvironmentConfig:
             "POSTGRES_DB": "aetherium_demo",
             "POSTGRES_USER": "demo_user",
             "POSTGRES_PASSWORD": "demo_password_123",
-            "DATABASE_URL": "postgresql://demo_user:demo_password_123@database:5432/aetherium_demo",
+            "DATABASE_URL": "postgresql+asyncpg://demo_user:demo_password_123@database:5432/aetherium_demo",
             
             # JWT Configuration (Demo)
             "JWT_SECRET_KEY": "demo_jwt_secret_key_for_development_only_32_chars",

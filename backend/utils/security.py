@@ -4,7 +4,7 @@ The Scribe's Protective Enchantments
 """
 
 import os
-import jwt
+from jose import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from cryptography.fernet import Fernet
@@ -21,8 +21,18 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
 # Encryption for sensitive data (like bank card numbers)
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", Fernet.generate_key().decode())
-cipher_suite = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+if not ENCRYPTION_KEY:
+    ENCRYPTION_KEY = Fernet.generate_key()
+elif isinstance(ENCRYPTION_KEY, str):
+    # If it's a string, try to use it as base64, otherwise generate a new key
+    try:
+        ENCRYPTION_KEY = ENCRYPTION_KEY.encode()
+        Fernet(ENCRYPTION_KEY)  # Test if it's valid
+    except:
+        ENCRYPTION_KEY = Fernet.generate_key()
+        
+cipher_suite = Fernet(ENCRYPTION_KEY)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""

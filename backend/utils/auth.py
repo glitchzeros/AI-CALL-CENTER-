@@ -2,7 +2,7 @@
 Authentication utilities for admin access
 """
 
-import jwt
+from jose import jwt
 import logging
 from datetime import datetime, timedelta
 from typing import Optional

@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from database.connection import AsyncSessionLocal
 from models.payment import PaymentTransaction
-from models.user import User, UserSubscription, SubscriptionTier
+from models.user import User
+from models.subscription import UserSubscription, SubscriptionTier
 from utils.security import generate_md5_signature
 
 logger = logging.getLogger("aetherium.payments")

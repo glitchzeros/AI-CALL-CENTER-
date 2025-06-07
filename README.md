@@ -9,6 +9,27 @@
 
 Aetherium is a comprehensive AI-powered communication platform that enables businesses to deploy autonomous AI agents (called "Scribes") capable of conducting natural, context-aware conversations across multiple channels while executing complex automated workflows. Now featuring an advanced admin dashboard for complete system management.
 
+## 🚀 Quick Start
+
+### One-Command Setup
+```bash
+./start-aetherium.sh
+```
+
+That's it! The script will handle everything automatically:
+- ✅ Check dependencies
+- ✅ Build all Docker images  
+- ✅ Start services in correct order
+- ✅ Wait for services to be ready
+- ✅ Display service status and URLs
+
+### Access Points
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Frontend** | http://localhost:12000 | Main web interface |
+| **Backend API** | http://localhost:8000 | REST API endpoints |
+| **API Documentation** | http://localhost:8000/docs | Interactive API docs |
+
 ## 🌟 Features
 
 ### 🎯 Core Capabilities

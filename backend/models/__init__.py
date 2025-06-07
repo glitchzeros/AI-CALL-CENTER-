@@ -3,7 +3,8 @@ Database models for Aetherium
 The Scribe's Data Structures
 """
 
-from .user import User, UserSubscription, SubscriptionTier
+from .user import User
+from .subscription import UserSubscription, SubscriptionTier
 from .workflow import ScribeWorkflow
 from .session import CommunicationSession, SessionMessage
 from .statistics import CallStatistics

@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 
 from services.gemini_client import GeminiClient
-from services.auth_service import get_current_user
+from routers.auth import get_current_user
 from models.user import User
 
 logger = logging.getLogger(__name__)

@@ -77,11 +77,11 @@ class GeminiApiKey(GeminiApiKeyBase):
 
 # GSM Modem Models
 class GSMModemBase(BaseModel):
-    device_path: str = Field(..., regex=r'^/dev/(tty|cu)[A-Za-z0-9]+$')
+    device_path: str = Field(..., pattern=r'^/dev/(tty|cu)[A-Za-z0-9]+$')
     device_name: Optional[str] = None
     usb_port: Optional[str] = None
-    phone_number: Optional[str] = Field(None, regex=r'^\+?[1-9]\d{1,14}$')
-    imei: Optional[str] = Field(None, regex=r'^\d{15}$')
+    phone_number: Optional[str] = Field(None, pattern=r'^\+?[1-9]\d{1,14}$')
+    imei: Optional[str] = Field(None, pattern=r'^\d{15}$')
     sim_card_id: Optional[str] = None
     carrier: Optional[str] = None
     role_type: ModemRole = ModemRole.UNASSIGNED
@@ -97,7 +97,7 @@ class GSMModemCreate(GSMModemBase):
 class GSMModemUpdate(BaseModel):
     device_name: Optional[str] = None
     usb_port: Optional[str] = None
-    phone_number: Optional[str] = Field(None, regex=r'^\+?[1-9]\d{1,14}$')
+    phone_number: Optional[str] = Field(None, pattern=r'^\+?[1-9]\d{1,14}$')
     role_type: Optional[ModemRole] = None
     assigned_to_company: Optional[str] = None
     audio_device: Optional[str] = None
@@ -121,7 +121,7 @@ class GSMModem(GSMModemBase):
 class CompanyNumberConfigBase(BaseModel):
     company_number: str = Field(..., min_length=3, max_length=50)
     system_prompt: str = Field(..., min_length=10, max_length=5000)
-    ai_personality: str = Field(default="professional", regex=r'^[a-z_]+$')
+    ai_personality: str = Field(default="professional", pattern=r'^[a-z_]+$')
     voice_settings: Optional[Dict[str, Any]] = {}
     is_active: bool = True
 
@@ -133,7 +133,7 @@ class CompanyNumberConfigCreate(CompanyNumberConfigBase):
 
 class CompanyNumberConfigUpdate(BaseModel):
     system_prompt: Optional[str] = Field(None, min_length=10, max_length=5000)
-    ai_personality: Optional[str] = Field(None, regex=r'^[a-z_]+$')
+    ai_personality: Optional[str] = Field(None, pattern=r'^[a-z_]+$')
     voice_settings: Optional[Dict[str, Any]] = None
     gemini_api_key_id: Optional[str] = None
     modem_assignment_id: Optional[str] = None
