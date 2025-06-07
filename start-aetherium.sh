@@ -43,18 +43,23 @@ check_dependencies() {
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
+    # Check for Docker Compose (either standalone or plugin)
+    if command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD="docker-compose"
+    elif docker compose version &> /dev/null; then
+        COMPOSE_CMD="docker compose"
+    else
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
     
-    print_success "All dependencies are installed"
+    print_success "All dependencies are installed (using $COMPOSE_CMD)"
 }
 
 # Stop any existing containers
 cleanup_existing() {
     print_status "Cleaning up existing containers..."
-    docker-compose down --remove-orphans 2>/dev/null || true
+    $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
     
     # Remove old volumes if they exist to ensure fresh start
     print_status "Removing old database volume for fresh start..."
@@ -66,14 +71,14 @@ cleanup_existing() {
 # Build all images
 build_images() {
     print_status "Building Docker images..."
-    docker-compose build --no-cache
+    $COMPOSE_CMD build --no-cache
     print_success "All images built successfully"
 }
 
 # Start core services first
 start_core_services() {
     print_status "Starting core services (Database & Redis)..."
-    docker-compose up -d redis database
+    $COMPOSE_CMD up -d redis database
     
     print_status "Waiting for core services to be healthy..."
     sleep 10
@@ -83,14 +88,14 @@ start_core_services() {
     local attempt=1
     
     while [ $attempt -le $max_attempts ]; do
-        if docker-compose exec -T database pg_isready -U demo_user -d aetherium_demo &>/dev/null; then
+        if $COMPOSE_CMD exec -T database pg_isready -U demo_user -d aetherium_demo &>/dev/null; then
             print_success "Database is ready"
             break
         fi
         
         if [ $attempt -eq $max_attempts ]; then
             print_error "Database failed to start after $max_attempts attempts"
-            docker-compose logs database
+            $COMPOSE_CMD logs database
             exit 1
         fi
         
@@ -103,7 +108,7 @@ start_core_services() {
 # Start backend services
 start_backend() {
     print_status "Starting backend API..."
-    docker-compose up -d backend-api
+    $COMPOSE_CMD up -d backend-api
     
     print_status "Waiting for backend to be ready..."
     sleep 15
@@ -121,7 +126,7 @@ start_backend() {
         if [ $attempt -eq $max_attempts ]; then
             print_warning "Backend may not be fully ready, but continuing..."
             print_status "Backend logs:"
-            docker-compose logs backend-api --tail=10
+            $COMPOSE_CMD logs backend-api --tail=10
             break
         fi
         
@@ -134,7 +139,7 @@ start_backend() {
 # Start frontend and other services
 start_frontend_and_services() {
     print_status "Starting frontend and remaining services..."
-    docker-compose up -d web-frontend nginx modem-manager telegram-bot-interface
+    $COMPOSE_CMD up -d web-frontend nginx modem-manager telegram-bot-interface
     
     print_status "Waiting for frontend to build and start..."
     sleep 20
@@ -146,7 +151,7 @@ start_frontend_and_services() {
 show_status() {
     print_status "Service Status:"
     echo "==============="
-    docker-compose ps
+    $COMPOSE_CMD ps
     echo ""
     
     print_status "Service URLs:"
@@ -176,7 +181,7 @@ show_status() {
     fi
     
     # Check database
-    if docker-compose exec -T database pg_isready -U demo_user -d aetherium_demo &>/dev/null; then
+    if $COMPOSE_CMD exec -T database pg_isready -U demo_user -d aetherium_demo &>/dev/null; then
         print_success "✅ Database is accessible"
     else
         print_warning "⚠️  Database connection issues"
@@ -188,7 +193,7 @@ show_logs() {
     if [ "$1" = "--logs" ] || [ "$1" = "-l" ]; then
         print_status "Recent logs from all services:"
         echo "==============================="
-        docker-compose logs --tail=5
+        $COMPOSE_CMD logs --tail=5
     fi
 }
 
@@ -214,9 +219,9 @@ main() {
     
     echo ""
     print_status "🔧 Troubleshooting commands:"
-    echo "  - View logs: docker-compose logs [service-name]"
-    echo "  - Restart service: docker-compose restart [service-name]"
-    echo "  - Stop all: docker-compose down"
+    echo "  - View logs: $COMPOSE_CMD logs [service-name]"
+    echo "  - Restart service: $COMPOSE_CMD restart [service-name]"
+    echo "  - Stop all: $COMPOSE_CMD down"
     echo "  - Full restart: ./start-aetherium.sh"
     echo ""
     print_success "✨ Aetherium is ready for use!"

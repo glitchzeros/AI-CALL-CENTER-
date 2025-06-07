@@ -53,7 +53,7 @@ That's it! The script will handle everything automatically:
 - **Edge TTS Integration**: Microsoft Edge Text-to-Speech with dynamic voice modulation
 - **Click Payment Gateway**: Integrated subscription and payment processing
 - **PostgreSQL Database**: Robust data storage with advanced triggers and functions
-- **Docker Orchestration**: Single-command deployment with `docker-compose up -d`
+- **Docker Orchestration**: Single-command deployment with `docker compose up -d`
 
 ## 🏗️ Architecture Overview
 
@@ -114,7 +114,7 @@ cd Ozodbek-
 
 3. **Deploy the Platform**:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 ### 🌐 Access Points
@@ -257,7 +257,7 @@ Ai-call-center-agent-/
 ├── modem-manager/          # GSM modem control service
 ├── telegram-bot/           # Telegram bot interface
 ├── database/              # PostgreSQL schema and migrations
-├── docker-compose.yml     # Orchestration configuration
+├── docker compose.yml     # Orchestration configuration
 └── .env.example          # Environment template
 ```
 
