@@ -204,17 +204,54 @@ jobs:
         cd backend
         python -m pytest tests/performance/ -v --benchmark-only
 
-  # Code Quality
+  # Code Quality Analysis
   code-quality:
     runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: 0  # Shallow clones should be disabled for better analysis
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+        
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Run backend tests with coverage
+      run: |
+        cd backend
+        pytest tests/ --cov=. --cov-report=xml --cov-report=html --junitxml=test-results.xml
+        
+    - name: Run frontend tests with coverage
+      run: |
+        cd frontend
+        npm run test:coverage
         
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
+      if: env.SONAR_TOKEN != ''
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
