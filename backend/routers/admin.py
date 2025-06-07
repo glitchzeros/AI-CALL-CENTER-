@@ -5,6 +5,7 @@ Admin API Routes
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from typing import List, Optional
 import logging
 
@@ -150,12 +151,12 @@ async def update_api_key(
             raise HTTPException(status_code=400, detail="No fields to update")
         
         values.append(api_key_id)
-        query = f"""
+        query = text(f"""
             UPDATE gemini_api_keys 
             SET {', '.join(update_fields)}, updated_at = CURRENT_TIMESTAMP
             WHERE id = ${param_count}
             RETURNING *
-        """
+        """)
         
         result = await db.execute(query, values)
         api_key_record = result.fetchone()
@@ -362,12 +363,12 @@ async def update_modem(
             raise HTTPException(status_code=400, detail="No fields to update")
         
         values.append(modem_id)
-        query = f"""
+        query = text(f"""
             UPDATE gsm_modems 
             SET {', '.join(update_fields)}, updated_at = CURRENT_TIMESTAMP
             WHERE id = ${param_count}
             RETURNING *
-        """
+        """)
         
         result = await db.execute(query, values)
         modem_record = result.fetchone()

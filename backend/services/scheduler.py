@@ -7,6 +7,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from database.connection import get_database
 from services.admin_service import AdminService
@@ -112,21 +113,9 @@ class AdminTaskScheduler:
     async def _update_api_key_usage_stats(self, db: AsyncSession):
         """Update API key usage statistics"""
         try:
-            # Update daily usage counts
-            query = """
-                UPDATE gemini_api_keys 
-                SET usage_count = (
-                    SELECT COUNT(*) 
-                    FROM api_key_usage 
-                    WHERE api_key_id = gemini_api_keys.id 
-                    AND timestamp >= CURRENT_DATE
-                )
-                WHERE status = 'assigned'
-            """
-            await db.execute(query)
-            await db.commit()
-            
-            logger.debug("📊 Updated API key usage statistics")
+            # Skip API key usage stats - gemini_api_keys table doesn't exist yet
+            # TODO: Implement when API key management is added
+            logger.debug("📊 Skipped API key usage statistics (table not implemented)")
             
         except Exception as e:
             logger.error(f"Failed to update API key usage stats: {e}")
@@ -136,11 +125,11 @@ class AdminTaskScheduler:
         """Update modem usage statistics"""
         try:
             # Update modem uptime and call statistics
-            query = """
+            query = text("""
                 UPDATE gsm_modems 
-                SET last_seen_at = CURRENT_TIMESTAMP
+                SET last_seen = CURRENT_TIMESTAMP
                 WHERE status = 'online'
-            """
+            """)
             await db.execute(query)
             await db.commit()
             

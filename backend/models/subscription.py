@@ -46,3 +46,4 @@ class UserSubscription(Base):
     # Relationships
     user = relationship("User", back_populates="subscription")
     tier = relationship("SubscriptionTier", back_populates="user_subscriptions")
+    payments = relationship("PaymentTransaction", back_populates="subscription")
