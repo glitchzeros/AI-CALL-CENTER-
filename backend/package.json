@@ -1,5 +1,5 @@
 {
-  "name": "gemini-voice-connect-backend",
+  "name": "Ai-call-center-agent-backend",
   "version": "1.0.0",
   "description": "Backend API for GeminiVoiceConnect AI Call Center Dashboard",
   "main": "dist/server.js",
