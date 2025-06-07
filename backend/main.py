@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 from database.connection import get_database, init_database
+from sqlalchemy import text
 from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support, admin
 from services.dream_journal import DreamJournalService
 from services.gemini_client import GeminiClient
@@ -123,9 +124,10 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     try:
-        # Check database connection
-        db = await get_database()
-        await db.execute("SELECT 1")
+        # Check database connection using the session factory directly
+        from database.connection import AsyncSessionLocal
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("SELECT 1"))
         
         return {
             "status": "healthy",
