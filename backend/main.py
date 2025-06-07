@@ -124,10 +124,10 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     try:
-        # Check database connection
-        async for db in get_database():
+        # Check database connection using the session factory directly
+        from database.connection import AsyncSessionLocal
+        async with AsyncSessionLocal() as db:
             await db.execute(text("SELECT 1"))
-            break
         
         return {
             "status": "healthy",
