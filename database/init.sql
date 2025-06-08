@@ -1,8 +1,15 @@
--- Aetherium Database Schema
--- The Scribe's Memory Palace
+--
+-- Aetherium Database Initialization Script
+-- The Scribe's Foundational Parchment
+-- This script creates all necessary tables and seeds initial data.
+--
 
--- Users table for client accounts
-CREATE TABLE users (
+-- Enable extensions if needed
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Users Table
+-- Stores user account and authentication information.
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone_number VARCHAR(20) UNIQUE NOT NULL,
@@ -11,262 +18,167 @@ CREATE TABLE users (
     is_verified BOOLEAN DEFAULT FALSE,
     sms_verification_code VARCHAR(6),
     sms_verification_expires_at TIMESTAMP,
+    require_sms_login BOOLEAN DEFAULT TRUE,
+    login_sms_code VARCHAR(6),
+    login_sms_expires_at TIMESTAMP,
+    last_login_sms_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE users IS 'Stores user accounts and authentication credentials.';
 
--- Subscription tiers and user subscriptions
-CREATE TABLE subscription_tiers (
+-- Subscription Tiers Table
+-- Defines the available subscription plans with their limits and pricing.
+CREATE TABLE IF NOT EXISTS subscription_tiers (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    price_usd DECIMAL(10,2) NOT NULL,
-    context_limit INTEGER NOT NULL, -- Token limit for conversation context
+    name VARCHAR(50) UNIQUE NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert default subscription tiers (with UZS pricing)
-INSERT INTO subscription_tiers (name, price_usd, context_limit, description) VALUES
-('Apprentice', 20.00, 4000, 'Context Memory: Up to 4,000 Tokens (Approx. 5 mins) | 246,000 so''m/oy'),
-('Journeyman', 50.00, 32000, 'Context Memory: Up to 32,000 Tokens (Approx. 1 hour) | 615,000 so''m/oy'),
-('Master Scribe', 100.00, -1, 'Context Memory: Full Session History (Unlimited Tokens) | 1,230,000 so''m/oy');
-
-CREATE TABLE user_subscriptions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    tier_id INTEGER REFERENCES subscription_tiers(id),
-    status VARCHAR(20) DEFAULT 'pending', -- pending, active, expired, cancelled
-    started_at TIMESTAMP,
-    expires_at TIMESTAMP,
-    click_trans_id BIGINT,
-    click_merchant_trans_id VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Scribe workflow configurations (The Invocation Editor saves)
-CREATE TABLE scribe_workflows (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    workflow_data JSONB NOT NULL, -- Serialized workflow nodes and connections
+    price_usd FLOAT DEFAULT 0.0,
+    price_uzs INTEGER DEFAULT 0,
+    max_daily_ai_minutes INTEGER DEFAULT 240,
+    max_daily_sms INTEGER DEFAULT 100,
+    context_limit INTEGER DEFAULT 4000,
+    has_agentic_functions BOOLEAN DEFAULT FALSE,
+    has_agentic_constructor BOOLEAN DEFAULT FALSE,
+    features TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE subscription_tiers IS 'Defines available subscription plans, features, and limits.';
 
--- Communication sessions (calls, SMS, Telegram)
-CREATE TABLE communication_sessions (
+-- User Subscriptions Table
+-- Links users to their active subscription tier.
+CREATE TABLE IF NOT EXISTS user_subscriptions (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    session_type VARCHAR(20) NOT NULL, -- voice, sms, telegram
-    caller_id VARCHAR(50), -- Phone number or Telegram handle
-    company_number VARCHAR(20), -- The assigned company number
-    status VARCHAR(20) DEFAULT 'active', -- active, completed, failed, abandoned
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ended_at TIMESTAMP,
-    duration_seconds INTEGER,
-    outcome VARCHAR(20), -- positive, negative, neutral
-    ai_summary TEXT,
-    context_data JSONB, -- Conversation history and context
-    current_invocation_state JSONB, -- Current workflow state
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Individual messages/interactions within sessions
-CREATE TABLE session_messages (
-    id SERIAL PRIMARY KEY,
-    session_id INTEGER REFERENCES communication_sessions(id) ON DELETE CASCADE,
-    speaker VARCHAR(10) NOT NULL, -- user, ai
-    message_type VARCHAR(20) NOT NULL, -- text, audio, sms
-    content TEXT,
-    audio_file_path VARCHAR(500),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB -- Additional data like audio features, language detected, etc.
-);
-
--- Call statistics and analytics
-CREATE TABLE call_statistics (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    date DATE NOT NULL,
-    total_calls INTEGER DEFAULT 0,
-    total_duration_seconds INTEGER DEFAULT 0,
-    positive_interactions INTEGER DEFAULT 0,
-    negative_interactions INTEGER DEFAULT 0,
-    total_sms_sent INTEGER DEFAULT 0,
-    total_sms_received INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, date)
-);
-
--- The Scribe's Dream Journal (autonomous meta-analysis)
-CREATE TABLE scribe_dream_journal (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    insight_category VARCHAR(50) NOT NULL, -- workflow_friction, potential_feature, performance_observation, etc.
-    insight_summary TEXT NOT NULL,
-    related_invocations TEXT[], -- Array of relevant Invocation types
-    anonymized_example_snippet TEXT,
-    severity_level VARCHAR(10) DEFAULT 'low', -- low, medium, high
-    metadata JSONB -- Additional structured insights
-);
-
--- GSM Modem management
-CREATE TABLE gsm_modems (
-    id SERIAL PRIMARY KEY,
-    device_id VARCHAR(50) UNIQUE NOT NULL, -- Physical device identifier
-    control_port VARCHAR(50), -- /dev/ttyUSBX for AT commands
-    audio_port VARCHAR(50), -- /dev/snd/pcmCYDX for audio
-    phone_number VARCHAR(20) UNIQUE,
-    status VARCHAR(20) DEFAULT 'offline', -- offline, idle, busy, error
-    signal_strength INTEGER,
-    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    assigned_user_id INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- SMS message queue and history
-CREATE TABLE sms_messages (
-    id SERIAL PRIMARY KEY,
-    modem_id INTEGER REFERENCES gsm_modems(id),
-    direction VARCHAR(10) NOT NULL, -- incoming, outgoing
-    from_number VARCHAR(20),
-    to_number VARCHAR(20),
-    content TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- pending, sent, delivered, failed
-    session_id INTEGER REFERENCES communication_sessions(id),
-    sent_at TIMESTAMP,
-    received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB
-);
-
--- Payment tracking for Click API integration
-CREATE TABLE payment_transactions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    subscription_id INTEGER REFERENCES user_subscriptions(id),
-    click_trans_id BIGINT UNIQUE,
-    click_paydoc_id BIGINT,
-    merchant_trans_id VARCHAR(255),
-    merchant_prepare_id INTEGER,
-    amount DECIMAL(10,2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- pending, completed, failed, cancelled
-    error_code INTEGER,
-    error_note TEXT,
-    sign_time TIMESTAMP,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tier_id INTEGER NOT NULL REFERENCES subscription_tiers(id),
+    status VARCHAR(20) DEFAULT 'inactive',
+    started_at TIMESTAMP,
+    expires_at TIMESTAMP,
+    auto_renew BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE user_subscriptions IS 'Tracks the subscription status for each user.';
 
--- Manual payment sessions table for bank transfer payments
-CREATE TABLE manual_payment_sessions (
+-- User Daily Usage Table
+-- Tracks daily resource consumption (AI minutes, SMS) for each user.
+CREATE TABLE IF NOT EXISTS user_daily_usage (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    usage_date DATE NOT NULL,
+    ai_minutes_used INTEGER DEFAULT 0,
+    sms_count_used INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, usage_date)
+);
+COMMENT ON TABLE user_daily_usage IS 'Tracks daily resource usage against subscription limits.';
+
+-- Workflows Table
+-- Stores the JSON definitions of user-created workflows.
+CREATE TABLE IF NOT EXISTS scribe_workflows (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    workflow_data JSONB NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+COMMENT ON TABLE scribe_workflows IS 'Stores user-created AI workflow definitions.';
+
+-- Communication Sessions Table
+-- Logs each voice, SMS, or Telegram session.
+CREATE TABLE IF NOT EXISTS communication_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_type VARCHAR(20) NOT NULL,
+    caller_id VARCHAR(50),
+    company_number VARCHAR(20),
+    status VARCHAR(20) DEFAULT 'active',
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ended_at TIMESTAMP,
+    duration_seconds INTEGER,
+    outcome VARCHAR(20),
+    ai_summary TEXT,
+    context_data JSONB,
+    current_invocation_state JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+COMMENT ON TABLE communication_sessions IS 'Main log for every communication session.';
+
+-- Session Messages Table
+-- Stores the transcript and messages for each communication session.
+CREATE TABLE IF NOT EXISTS session_messages (
+    id SERIAL PRIMARY KEY,
+    session_id INTEGER NOT NULL REFERENCES communication_sessions(id) ON DELETE CASCADE,
+    speaker VARCHAR(10) NOT NULL,
+    message_type VARCHAR(20) NOT NULL,
+    content TEXT,
+    audio_file_path VARCHAR(500),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata JSONB
+);
+COMMENT ON TABLE session_messages IS 'Stores individual messages within a communication session.';
+
+-- Manual Payment Sessions Table
+-- Tracks manual bank transfer payment attempts.
+CREATE TABLE IF NOT EXISTS manual_payment_sessions (
     id SERIAL PRIMARY KEY,
     payment_id VARCHAR(100) UNIQUE NOT NULL,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tier_name VARCHAR(50) NOT NULL,
-    amount_usd DECIMAL(10,2) NOT NULL,
-    amount_uzs DECIMAL(12,0) NOT NULL,
+    amount_usd DECIMAL(10, 2) NOT NULL,
+    amount_uzs DECIMAL(12, 0) NOT NULL,
     reference_code VARCHAR(20) UNIQUE NOT NULL,
     company_number VARCHAR(20) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- pending, confirmed, expired, cancelled
+    status VARCHAR(20) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
     confirmed_at TIMESTAMP,
     sms_content TEXT
 );
+COMMENT ON TABLE manual_payment_sessions IS 'Tracks manual bank transfer payment sessions.';
 
--- Telegram bot integration
-CREATE TABLE telegram_chats (
-    id SERIAL PRIMARY KEY,
-    chat_id BIGINT UNIQUE NOT NULL,
-    user_id INTEGER REFERENCES users(id),
-    username VARCHAR(255),
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
--- Company number pool management
-CREATE TABLE company_number_pool (
-    id SERIAL PRIMARY KEY,
-    phone_number VARCHAR(20) UNIQUE NOT NULL,
-    is_assigned BOOLEAN DEFAULT FALSE,
-    assigned_user_id INTEGER REFERENCES users(id),
-    assigned_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- =========================
+--      SEED INITIAL DATA
+-- =========================
 
--- Indexes for performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_phone ON users(phone_number);
-CREATE INDEX idx_users_company_number ON users(company_number);
-CREATE INDEX idx_sessions_user_id ON communication_sessions(user_id);
-CREATE INDEX idx_sessions_status ON communication_sessions(status);
-CREATE INDEX idx_sessions_started_at ON communication_sessions(started_at);
-CREATE INDEX idx_messages_session_id ON session_messages(session_id);
-CREATE INDEX idx_messages_timestamp ON session_messages(timestamp);
-CREATE INDEX idx_statistics_user_date ON call_statistics(user_id, date);
-CREATE INDEX idx_modems_status ON gsm_modems(status);
-CREATE INDEX idx_sms_direction_status ON sms_messages(direction, status);
-CREATE INDEX idx_payments_click_trans_id ON payment_transactions(click_trans_id);
-CREATE INDEX idx_manual_payments_reference ON manual_payment_sessions(reference_code);
-CREATE INDEX idx_manual_payments_user_status ON manual_payment_sessions(user_id, status);
-CREATE INDEX idx_manual_payments_expires ON manual_payment_sessions(expires_at);
-CREATE INDEX idx_dream_journal_category ON scribe_dream_journal(insight_category);
-CREATE INDEX idx_dream_journal_timestamp ON scribe_dream_journal(timestamp);
+-- Seed Subscription Tiers with new structure
+-- This uses ON CONFLICT to prevent errors on subsequent runs and allows for easy updates.
+INSERT INTO subscription_tiers (name, display_name, description, price_usd, price_uzs, max_daily_ai_minutes, max_daily_sms, context_limit, has_agentic_functions, has_agentic_constructor, features) VALUES
+('tier1', 'First Tier', 'Ideal for starting out and basic use cases.', 20, 250000, 240, 100, 4000, true, true, '["Basic AI Features", "Standard Support"]'),
+('tier2', 'Second Tier', 'Perfect for growing businesses with higher demands.', 50, 750000, 480, 300, 32000, true, true, '["Advanced AI Features", "Priority Support", "Workflow Constructor"]'),
+('tier3', 'Third Tier', 'Ultimate solution for large-scale enterprise needs.', 100, 1250000, 999999, 999999, -1, true, true, '["All Features", "Dedicated Support", "Unlimited Usage"]')
+ON CONFLICT (name) DO UPDATE SET
+    display_name = EXCLUDED.display_name,
+    description = EXCLUDED.description,
+    price_usd = EXCLUDED.price_usd,
+    price_uzs = EXCLUDED.price_uzs,
+    max_daily_ai_minutes = EXCLUDED.max_daily_ai_minutes,
+    max_daily_sms = EXCLUDED.max_daily_sms,
+    context_limit = EXCLUDED.context_limit,
+    has_agentic_functions = EXCLUDED.has_agentic_functions,
+    has_agentic_constructor = EXCLUDED.has_agentic_constructor,
+    features = EXCLUDED.features,
+    updated_at = CURRENT_TIMESTAMP;
 
--- Trigger to update updated_at timestamps
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- =========================
+--      CREATE INDEXES
+-- =========================
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON user_subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_workflows_updated_at BEFORE UPDATE ON scribe_workflows FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_statistics_updated_at BEFORE UPDATE ON call_statistics FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payment_transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Create indexes for performance improvements on frequently queried columns.
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON communication_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_session_id ON session_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_workflows_user_id ON scribe_workflows(user_id);
+CREATE INDEX IF NOT EXISTS idx_manual_payments_user_id ON manual_payment_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_manual_payments_reference_code ON manual_payment_sessions(reference_code);
+CREATE INDEX IF NOT EXISTS idx_user_daily_usage_user_date ON user_daily_usage(user_id, usage_date);
 
--- Insert some sample company numbers for the pool
-INSERT INTO company_number_pool (phone_number) VALUES
-('+998901234567'),
-('+998901234568'),
-('+998901234569'),
-('+998901234570'),
-('+998901234571'),
-('+998901234572'),
-('+998901234573'),
-('+998901234574'),
-('+998901234575'),
-('+998901234576');
-
--- Create a function to assign company numbers
-CREATE OR REPLACE FUNCTION assign_company_number(p_user_id INTEGER)
-RETURNS VARCHAR(20) AS $$
-DECLARE
-    assigned_number VARCHAR(20);
-BEGIN
-    -- Get the first available number and assign it
-    UPDATE company_number_pool 
-    SET is_assigned = TRUE, 
-        assigned_user_id = p_user_id, 
-        assigned_at = CURRENT_TIMESTAMP
-    WHERE id = (
-        SELECT id FROM company_number_pool 
-        WHERE is_assigned = FALSE 
-        ORDER BY id LIMIT 1
-    )
-    RETURNING phone_number INTO assigned_number;
-    
-    -- Update the user record
-    UPDATE users SET company_number = assigned_number WHERE id = p_user_id;
-    
-    RETURN assigned_number;
-END;
-$$ LANGUAGE plpgsql;
+-- Log completion to the console when the script finishes.
+\echo '✅ Aetherium database initialized successfully with updated subscription tiers.'
