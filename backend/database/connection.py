@@ -42,15 +42,19 @@ async def get_database() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency to get database session
     """
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception as e:
-            logger.error(f"Database session error: {e}")
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+    try:
+        async with AsyncSessionLocal() as session:
+            try:
+                yield session
+            except Exception as e:
+                logger.error(f"Database session error during operation: {e}")
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
+    except Exception as e:
+        logger.error(f"Database session creation error: {e}")
+        raise
 
 async def init_database():
     """

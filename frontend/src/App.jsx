@@ -11,7 +11,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import CompanyNumberPage from './pages/CompanyNumberPage'
 import DashboardPage from './pages/DashboardPage'
-import SubscriptionPageSimple from './pages/SubscriptionPageSimple'
+import SubscriptionPage from './pages/SubscriptionPage'
 import InvocationEditorPage from './pages/InvocationEditorPage'
 import StatisticsPage from './pages/StatisticsPage'
 import SessionsPage from './pages/SessionsPage'
@@ -46,7 +46,7 @@ function App() {
             
             <Route path="/subscription" element={
               <ProtectedRoute>
-                <SubscriptionPageSimple />
+                <SubscriptionPage />
               </ProtectedRoute>
             } />
             

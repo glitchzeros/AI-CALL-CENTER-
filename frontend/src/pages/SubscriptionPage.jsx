@@ -31,28 +31,31 @@ const SubscriptionPage = () => {
   const [timeRemaining, setTimeRemaining] = useState(0)
 
   // Fetch subscription tiers
-  const { data: tiers, isLoading: tiersLoading } = useQuery(
+  const { data: tiers, isLoading: tiersLoading, error: tiersError } = useQuery(
     'subscription-tiers',
     subscriptionsAPI.getTiers
   )
 
   // Fetch user profile for current subscription
-  const { data: profile, isLoading: profileLoading } = useQuery(
+  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery(
     'user-profile',
     usersAPI.getProfile
   )
 
   // Fetch payment transactions
-  const { data: transactions, isLoading: transactionsLoading } = useQuery(
+  const { data: transactions, isLoading: transactionsLoading, error: transactionsError } = useQuery(
     'payment-transactions',
     () => paymentsAPI.getTransactions({ limit: 10 })
   )
 
   // Fetch current subscription and usage
-  const { data: mySubscription, isLoading: subscriptionLoading } = useQuery(
+  const { data: mySubscription, isLoading: subscriptionLoading, error: subscriptionError } = useQuery(
     'my-subscription',
     subscriptionsAPI.getMySubscription,
-    { refetchInterval: 30000 } // Refresh every 30 seconds
+    { 
+      refetchInterval: 30000, // Refresh every 30 seconds
+      retry: false // Don't retry on error to see the actual error
+    }
   )
 
   // Fetch usage status
@@ -398,6 +401,28 @@ const SubscriptionPage = () => {
           )}
         </div>
       </div>
+    )
+  }
+
+  // Show errors if any
+  if (tiersError || profileError || subscriptionError) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">Error Loading Subscription Data</h2>
+            {tiersError && <p className="text-red-500 mb-2">Tiers Error: {tiersError.message}</p>}
+            {profileError && <p className="text-red-500 mb-2">Profile Error: {profileError.message}</p>}
+            {subscriptionError && <p className="text-red-500 mb-2">Subscription Error: {subscriptionError.message}</p>}
+            <button 
+              onClick={() => window.location.reload()} 
+              className="btn-primary mt-4"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </Layout>
     )
   }
 

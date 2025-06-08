@@ -25,10 +25,10 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # Relationships
-    subscription = relationship("UserSubscription", back_populates="user", uselist=False)
-    workflows = relationship("ScribeWorkflow", back_populates="user")
-    sessions = relationship("CommunicationSession", back_populates="user")
-    statistics = relationship("CallStatistics", back_populates="user")
-    payments = relationship("PaymentTransaction", back_populates="user")
-    sms_verification_sessions = relationship("SMSVerificationSession", back_populates="user")
+    # Relationships - temporarily disabled to avoid issues
+    # subscription = relationship("UserSubscription", back_populates="user", uselist=False)
+    # workflows = relationship("ScribeWorkflow", back_populates="user")
+    # sessions = relationship("CommunicationSession", back_populates="user")
+    # statistics = relationship("CallStatistics", back_populates="user")
+    # payments = relationship("PaymentTransaction", back_populates="user")
+    # sms_verification_sessions = relationship("SMSVerificationSession", back_populates="user")
