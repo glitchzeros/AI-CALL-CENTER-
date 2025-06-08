@@ -7,6 +7,10 @@ import logging
 import asyncio
 import httpx
 from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from database.connection import get_database
+from models.modem import GSMModem
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +78,23 @@ class SMSService:
         except Exception as e:
             logger.error(f"Login SMS sending error: {e}")
             return False
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.modem_manager_url}/status",
+                    timeout=5.0
+                )
+                
+                if response.status_code == 200:
+                    status = response.json()
+                    real_modems = status.get("real_modems_count", 0)
+                    return real_modems == 0
+                else:
+                    # If modem manager is not available, use demo mode
+                    return True
+                    
+        except Exception as e:
+            logger.warning(f"Could not check modem manager status: {e}")
+            return True  # Default to demo mode if can't connect
     
     async def send_verification_sms(self, phone_number: str, verification_code: str) -> bool:
         """
@@ -153,4 +174,41 @@ class SMSService:
                     
         except Exception as e:
             logger.error(f"SMS sending error: {e}")
+            return False
+    async def send_login_verification_sms(self, phone_number: str, verification_code: str) -> bool:
+        """
+        Send SMS verification code for login
+        
+        Args:
+            phone_number: Recipient phone number
+            verification_code: 6-digit verification code
+            
+        Returns:
+            True if SMS was sent successfully
+        """
+        try:
+            message = f"Ваш код входа в Aetherium: {verification_code}. Код действителен 10 минут."
+            
+            # Send via modem manager
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.modem_manager_url}/send-sms",
+                    json={
+                        "to_number": phone_number,
+                        "content": message,
+                        "priority": "high",
+                        "sms_type": "login_verification"
+                    },
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    logger.info(f"Login verification SMS sent to {phone_number}")
+                    return True
+                else:
+                    logger.error(f"Failed to send login SMS: {response.status_code} - {response.text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"Login SMS sending error: {e}")
             return False

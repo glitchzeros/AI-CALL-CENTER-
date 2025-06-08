@@ -6,6 +6,7 @@ import { TranslationProvider } from './hooks/useTranslation'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Pages
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import CompanyNumberPage from './pages/CompanyNumberPage'
@@ -15,6 +16,7 @@ import InvocationEditorPage from './pages/InvocationEditorPage'
 import StatisticsPage from './pages/StatisticsPage'
 import SessionsPage from './pages/SessionsPage'
 import TranslationTestPage from './pages/TranslationTestPage'
+import GSMModulesPage from './pages/GSMModulesPage'
 
 function App() {
   return (
@@ -24,6 +26,7 @@ function App() {
           <div className="app">
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/translation-test" element={<TranslationTestPage />} />
@@ -65,9 +68,14 @@ function App() {
               </ProtectedRoute>
             } />
             
+            <Route path="/gsm-modules" element={
+              <ProtectedRoute>
+                <GSMModulesPage />
+              </ProtectedRoute>
+            } />
+            
             {/* Default redirect */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </div>
         </SoundProvider>

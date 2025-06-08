@@ -3,18 +3,18 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation, LanguageSelector } from '../hooks/useTranslation'
-import { Eye, EyeOff, LogIn, Globe, MessageSquare, Clock, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Globe, MessageSquare, Clock, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { authAPI } from '../services/api'
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [showSMSVerification, setShowSMSVerification] = useState(false)
+  const [smsStep, setSmsStep] = useState(false)
   const [smsLoading, setSmsLoading] = useState(false)
   const [demoCode, setDemoCode] = useState(null)
-  const [loginData, setLoginData] = useState(null)
   const [timeRemaining, setTimeRemaining] = useState(0)
+  const [loginData, setLoginData] = useState(null)
+  
   const { login, isAuthenticated, isFirstLogin } = useAuth()
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -24,6 +24,7 @@ const LoginPage = () => {
     register,
     handleSubmit,
     formState: { errors },
+    reset
   } = useForm()
 
   const {
@@ -63,6 +64,7 @@ const LoginPage = () => {
         if (result.requires_sms) {
           // SMS verification required
           setLoginData(data)
+          setSmsStep(true)
           await requestSmsCode(data)
         } else {
           // Direct login successful
@@ -84,22 +86,34 @@ const LoginPage = () => {
   const requestSmsCode = async (data) => {
     setSmsLoading(true)
     try {
-      const response = await authAPI.requestLoginSMS({
-        login_identifier: data.login_identifier,
-        password: data.password
+      const response = await fetch('/api/auth/login-sms-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
 
-      if (response.demo_code) {
-        setDemoCode(response.demo_code)
-        toast.success(`Demo SMS code: ${response.demo_code}`)
-      } else {
-        toast.success('SMS verification code sent to your phone')
-      }
+      const result = await response.json()
 
-      setShowSMSVerification(true)
-      setTimeRemaining(600) // 10 minutes
+      if (response.ok) {
+        setTimeRemaining(600) // 10 minutes
+        
+        if (result.demo_code) {
+          setDemoCode(result.demo_code)
+          toast.success(`Demo SMS code: ${result.demo_code}`, {
+            duration: 10000,
+            icon: '📱'
+          })
+        } else {
+          toast.success('SMS verification code sent to your phone')
+        }
+      } else {
+        throw new Error(result.detail || 'Failed to send SMS')
+      }
     } catch (error) {
-      toast.error(error.message || 'Failed to send SMS code')
+      toast.error(error.message || 'Failed to send SMS verification code')
+      setSmsStep(false)
     } finally {
       setSmsLoading(false)
     }
@@ -108,35 +122,66 @@ const LoginPage = () => {
   const onSmsSubmit = async (data) => {
     setSmsLoading(true)
     try {
-      const response = await authAPI.verifyLoginSMS({
-        login_identifier: loginData.login_identifier,
-        verification_code: data.verification_code
+      const response = await fetch('/api/auth/login-sms-verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          login_identifier: loginData.login_identifier,
+          verification_code: data.verification_code
+        }),
       })
 
-      if (response.access_token) {
-        // Store token and update auth state
-        localStorage.setItem('token', response.access_token)
+      const result = await response.json()
+
+      if (response.ok) {
+        // Store token and redirect
+        localStorage.setItem('token', result.access_token)
         toast.success('Login successful!')
         
-        if (response.is_first_login) {
+        if (result.is_first_login) {
           navigate('/company-number')
         } else {
           const from = location.state?.from?.pathname || '/dashboard'
           navigate(from)
         }
+      } else {
+        throw new Error(result.detail || 'Invalid verification code')
       }
     } catch (error) {
-      toast.error(error.message || 'Invalid verification code')
+      toast.error(error.message || 'SMS verification failed')
     } finally {
       setSmsLoading(false)
     }
   }
 
-  const goBackToLogin = () => {
-    setShowSMSVerification(false)
-    setDemoCode(null)
-    setTimeRemaining(0)
-    resetSMS()
+  const getDemoCode = async () => {
+    try {
+      const response = await fetch('/api/gsm-modules/demo-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          login_identifier: loginData.login_identifier
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setDemoCode(result.demo_code)
+        toast.success(`Demo code: ${result.demo_code}`, {
+          duration: 10000,
+          icon: '📱'
+        })
+      } else {
+        toast.error('No demo code available')
+      }
+    } catch (error) {
+      toast.error('Failed to get demo code')
+    }
   }
 
   const formatTime = (seconds) => {
@@ -145,7 +190,18 @@ const LoginPage = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  if (showSMSVerification) {
+  const resendSms = async () => {
+    await requestSmsCode(loginData)
+  }
+
+  const goBack = () => {
+    setSmsStep(false)
+    setDemoCode(null)
+    setTimeRemaining(0)
+    resetSms()
+  }
+
+  if (smsStep) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-coffee-beige px-4">
         <div className="w-full max-w-md">
@@ -166,42 +222,18 @@ const LoginPage = () => {
 
           {/* SMS Verification Form */}
           <div className="paper-panel">
-            <form onSubmit={handleSubmitSMS(onSmsSubmit)} className="space-y-6">
-              {/* Demo Code Display */}
-              {demoCode && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <MessageSquare size={20} className="text-yellow-600" />
-                    <span className="font-medium text-yellow-800">Demo Mode</span>
-                  </div>
-                  <p className="text-yellow-700 text-sm mb-2">
-                    No real GSM modules available. Use this demo code:
-                  </p>
-                  <div className="bg-yellow-100 rounded px-3 py-2 font-mono text-lg font-bold text-yellow-900">
-                    {demoCode}
-                  </div>
-                </div>
-              )}
-
-              {/* Timer */}
-              {timeRemaining > 0 && (
-                <div className="flex items-center justify-center space-x-2 text-coffee-sienna">
-                  <Clock size={16} />
-                  <span>Code expires in: {formatTime(timeRemaining)}</span>
-                </div>
-              )}
-
-              {/* Verification Code Input */}
+            <form onSubmit={handleSubmitSms(onSmsSubmit)} className="space-y-6">
+              {/* Verification Code */}
               <div>
                 <label className="block text-coffee-brown font-medium mb-2">
                   Verification Code
                 </label>
                 <input
                   type="text"
-                  className="input-paper w-full text-center text-lg font-mono"
+                  className="input-paper w-full text-center text-2xl tracking-widest"
                   placeholder="000000"
                   maxLength="6"
-                  {...registerSMS('verification_code', {
+                  {...registerSms('verification_code', {
                     required: 'Verification code is required',
                     pattern: {
                       value: /^\d{6}$/,
@@ -214,41 +246,69 @@ const LoginPage = () => {
                 )}
               </div>
 
+              {/* Timer */}
+              {timeRemaining > 0 && (
+                <div className="flex items-center justify-center space-x-2 text-coffee-sienna">
+                  <Clock size={16} />
+                  <span>Code expires in {formatTime(timeRemaining)}</span>
+                </div>
+              )}
+
+              {/* Demo Code Display */}
+              {demoCode && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-yellow-800">
+                    <AlertCircle size={16} />
+                    <span className="font-medium">Demo Mode</span>
+                  </div>
+                  <p className="text-yellow-700 mt-1">
+                    No real GSM modules available. Use demo code: <strong>{demoCode}</strong>
+                  </p>
+                </div>
+              )}
+
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={smsLoading || timeRemaining === 0}
+                disabled={smsLoading}
                 className="btn-primary w-full flex items-center justify-center space-x-2"
               >
                 {smsLoading ? (
                   <div className="loading-quill w-5 h-5"></div>
                 ) : (
                   <>
-                    <LogIn size={20} />
-                    <span>Verify & Login</span>
+                    <MessageSquare size={20} />
+                    <span>Verify Code</span>
                   </>
                 )}
               </button>
-
-              {/* Back Button */}
-              <button
-                type="button"
-                onClick={goBackToLogin}
-                className="btn-secondary w-full flex items-center justify-center space-x-2"
-              >
-                <ArrowLeft size={20} />
-                <span>Back to Login</span>
-              </button>
             </form>
 
-            {/* Resend Code */}
-            <div className="mt-6 text-center">
+            {/* Actions */}
+            <div className="mt-6 space-y-3">
+              {/* Resend SMS */}
               <button
-                onClick={() => requestSmsCode(loginData)}
+                onClick={resendSms}
                 disabled={smsLoading || timeRemaining > 540} // Allow resend after 1 minute
-                className="text-coffee-sienna hover:text-coffee-brown font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-secondary w-full"
               >
-                Resend Code
+                Resend SMS Code
+              </button>
+
+              {/* Get Demo Code */}
+              <button
+                onClick={getDemoCode}
+                className="btn-secondary w-full"
+              >
+                Get Demo Code
+              </button>
+
+              {/* Back to Login */}
+              <button
+                onClick={goBack}
+                className="text-coffee-sienna hover:text-coffee-brown font-medium underline w-full text-center"
+              >
+                Back to Login
               </button>
             </div>
           </div>

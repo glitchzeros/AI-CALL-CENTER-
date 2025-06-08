@@ -19,7 +19,7 @@ from pathlib import Path
 
 from database.connection import get_database, init_database
 from sqlalchemy import text
-from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support, admin
+from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support, admin, gsm_modules, payment_sessions, landing
 from services.dream_journal import DreamJournalService
 from services.gemini_client import GeminiClient
 from services.edge_tts_client import EdgeTTSClient
@@ -109,6 +109,9 @@ app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(telegram_integration.router, prefix="/api/telegram", tags=["Telegram"])
 app.include_router(support.router, tags=["Support"])
 app.include_router(admin.router, tags=["Admin"])
+app.include_router(gsm_modules.router, prefix="/api/gsm-modules", tags=["GSM Modules"])
+app.include_router(payment_sessions.router, prefix="/api/payment-sessions", tags=["Payment Sessions"])
+app.include_router(landing.router, tags=["Landing"])
 
 @app.get("/")
 async def root():

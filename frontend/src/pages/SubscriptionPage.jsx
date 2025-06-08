@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import Layout from '../components/Layout'
 import { subscriptionsAPI, paymentsAPI, usersAPI } from '../services/api'
@@ -25,6 +25,10 @@ const SubscriptionPage = () => {
   const queryClient = useQueryClient()
   const [selectedTier, setSelectedTier] = useState(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [showPaymentMonitoring, setShowPaymentMonitoring] = useState(false)
+  const [bankCardNumber, setBankCardNumber] = useState('')
+  const [paymentSession, setPaymentSession] = useState(null)
+  const [timeRemaining, setTimeRemaining] = useState(0)
 
   // Fetch subscription tiers
   const { data: tiers, isLoading: tiersLoading } = useQuery(
@@ -64,7 +68,6 @@ const SubscriptionPage = () => {
 
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentInstructions, setPaymentInstructions] = useState(null)
-  const [timeRemaining, setTimeRemaining] = useState(0)
 
   const handleSubscribe = async (tier) => {
     setSelectedTier(tier)
@@ -96,6 +99,73 @@ const SubscriptionPage = () => {
       return () => clearInterval(interval)
     }
   }, [paymentInstructions, showPaymentModal])
+
+  // Check for active payment monitoring session on load
+  useEffect(() => {
+    checkPaymentMonitoringStatus()
+  }, [])
+
+  // Timer for payment monitoring session
+  useEffect(() => {
+    if (paymentSession && paymentSession.time_remaining_seconds > 0) {
+      const interval = setInterval(() => {
+        setTimeRemaining(prev => {
+          const newTime = Math.max(0, prev - 1)
+          if (newTime === 0) {
+            setPaymentSession(null)
+            setShowPaymentMonitoring(false)
+            toast.error('Payment monitoring expired. Please try again.')
+          }
+          return newTime
+        })
+      }, 1000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [paymentSession])
+
+  const checkPaymentMonitoringStatus = async () => {
+    try {
+      const response = await subscriptionsAPI.getPaymentMonitoringStatus()
+      if (response.data.has_active_session) {
+        setPaymentSession(response.data.session)
+        setTimeRemaining(response.data.session.time_remaining_seconds)
+        setShowPaymentMonitoring(true)
+      }
+    } catch (error) {
+      console.error('Failed to check payment monitoring status:', error)
+    }
+  }
+
+  const startPaymentMonitoring = async (tier) => {
+    if (!bankCardNumber.trim()) {
+      toast.error('Please enter a bank card number')
+      return
+    }
+
+    setIsProcessingPayment(true)
+    try {
+      const response = await subscriptionsAPI.startPaymentMonitoring({
+        tier_id: tier.id,
+        bank_card_number: bankCardNumber.trim()
+      })
+
+      setPaymentSession(response.data.monitoring_session)
+      setTimeRemaining(30 * 60) // 30 minutes
+      setShowPaymentMonitoring(true)
+      toast.success(response.data.message)
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to start payment monitoring')
+    } finally {
+      setIsProcessingPayment(false)
+    }
+  }
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
 
   const getTierIcon = (tierName) => {
     switch (tierName.toLowerCase()) {
@@ -212,32 +282,73 @@ const SubscriptionPage = () => {
           )}
         </div>
 
-        <button
-          onClick={() => handleSubscribe(tier)}
-          disabled={isCurrentTier || isProcessingPayment}
-          className={`w-full ${
-            isCurrentTier 
-              ? 'btn-secondary opacity-50 cursor-not-allowed' 
-              : isRecommended 
-                ? 'bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-6 rounded border-2 border-yellow-600'
-                : 'btn-primary'
-          } flex items-center justify-center space-x-2`}
-        >
-          {isProcessingPayment && selectedTier?.id === tier.id ? (
-            <div className="loading-quill w-5 h-5"></div>
-          ) : isCurrentTier ? (
+        {/* Payment Options */}
+        <div className="space-y-3">
+          {!isCurrentTier && (
             <>
-              <Check size={20} />
-              <span>{t('subscription', 'currentPlan')}</span>
-            </>
-          ) : (
-            <>
-              <CreditCard size={20} />
-              <span>{t('subscription', 'subscribeNow')}</span>
-              <ArrowRight size={16} />
+              {/* Bank Card Input for Payment Monitoring */}
+              <div>
+                <label className="block text-coffee-brown text-sm font-medium mb-2">
+                  Bank Card Number (for payment monitoring)
+                </label>
+                <input
+                  type="text"
+                  value={bankCardNumber}
+                  onChange={(e) => setBankCardNumber(e.target.value)}
+                  placeholder="8600 1234 5678 9012"
+                  className="input-paper w-full text-sm"
+                  disabled={isProcessingPayment}
+                />
+              </div>
+
+              {/* Payment Monitoring Button */}
+              <button
+                onClick={() => startPaymentMonitoring(tier)}
+                disabled={isProcessingPayment || !bankCardNumber.trim()}
+                className={`w-full ${
+                  isRecommended 
+                    ? 'bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-6 rounded border-2 border-yellow-600'
+                    : 'btn-primary'
+                } flex items-center justify-center space-x-2`}
+              >
+                {isProcessingPayment && selectedTier?.id === tier.id ? (
+                  <div className="loading-quill w-5 h-5"></div>
+                ) : (
+                  <>
+                    <Clock size={20} />
+                    <span>Start Payment Monitoring (30 min)</span>
+                  </>
+                )}
+              </button>
+
+              {/* Traditional Payment Button */}
+              <button
+                onClick={() => handleSubscribe(tier)}
+                disabled={isProcessingPayment}
+                className="w-full btn-secondary flex items-center justify-center space-x-2"
+              >
+                {isProcessingPayment && selectedTier?.id === tier.id ? (
+                  <div className="loading-quill w-5 h-5"></div>
+                ) : (
+                  <>
+                    <CreditCard size={20} />
+                    <span>Traditional Payment</span>
+                  </>
+                )}
+              </button>
             </>
           )}
-        </button>
+
+          {isCurrentTier && (
+            <button
+              disabled
+              className="w-full btn-secondary opacity-50 cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <Check size={20} />
+              <span>{t('subscription', 'currentPlan')}</span>
+            </button>
+          )}
+        </div>
       </div>
     )
   }
@@ -294,6 +405,46 @@ const SubscriptionPage = () => {
                   <span className="font-medium">{t('subscription', 'active')}</span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Monitoring Status */}
+        {showPaymentMonitoring && paymentSession && (
+          <div className="paper-panel bg-blue-50 border-2 border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Clock size={24} className="text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-coffee-brown">Payment Monitoring Active</h3>
+                  <p className="text-coffee-sienna">
+                    Monitoring payments to card: {paymentSession.bank_card_number}
+                  </p>
+                  <p className="text-sm text-coffee-sienna">
+                    Amount: {paymentSession.amount_uzs?.toLocaleString()} UZS (${paymentSession.amount_usd})
+                  </p>
+                  <p className="text-sm text-coffee-sienna">
+                    Reference: {paymentSession.reference_code}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className={`text-lg font-bold ${timeRemaining < 300 ? 'text-red-600' : 'text-blue-600'}`}>
+                  {formatTime(timeRemaining)}
+                </div>
+                <p className="text-sm text-coffee-sienna">remaining</p>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Instructions:</strong> Transfer {paymentSession.amount_uzs?.toLocaleString()} UZS to card 
+                {paymentSession.bank_card_number} with reference "{paymentSession.reference_code}". 
+                We'll automatically detect the payment via SMS and activate your subscription.
+              </p>
             </div>
           </div>
         )}

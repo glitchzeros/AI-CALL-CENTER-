@@ -163,82 +163,96 @@ const apiWithRetry = {
 
 // Auth API
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  verifySMS: (verificationData) => api.post('/auth/verify-sms', verificationData),
-  login: (loginData) => api.post('/auth/login', loginData),
-  resendSMS: (email) => api.post('/auth/resend-sms', { email }),
+  register: (userData) => api.post('/api/auth/register', userData),
+  verifySMS: (verificationData) => api.post('/api/auth/verify-sms', verificationData),
+  login: (loginData) => api.post('/api/auth/login', loginData),
+  requestLoginSMS: (loginData) => api.post('/api/auth/login-sms-request', loginData),
+  verifyLoginSMS: (verificationData) => api.post('/api/auth/login-sms-verify', verificationData),
+  resendSMS: (email) => api.post('/api/auth/resend-sms', { email }),
 }
 
 // Users API
 export const usersAPI = {
-  getProfile: () => api.get('/users/profile'),
-  getCompanyNumber: () => api.get('/users/company-number'),
+  getProfile: () => api.get('/api/users/profile'),
+  getCompanyNumber: () => api.get('/api/users/company-number'),
 }
 
 // Subscriptions API
 export const subscriptionsAPI = {
-  getTiers: () => api.get('/subscriptions/tiers'),
-  initiatePayment: (tierData) => api.post('/subscriptions/initiate-payment', tierData),
+  getTiers: () => api.get('/api/subscriptions/tiers'),
+  initiatePayment: (tierData) => api.post('/api/subscriptions/initiate-payment', tierData),
+  startPaymentMonitoring: (paymentData) => api.post('/api/subscriptions/start-payment-monitoring', paymentData),
+  getPaymentMonitoringStatus: () => api.get('/api/subscriptions/payment-monitoring-status'),
 }
 
 // Workflows API
 export const workflowsAPI = {
-  getWorkflows: () => api.get('/workflows/'),
-  getWorkflow: (id) => api.get(`/workflows/${id}`),
-  createWorkflow: (workflowData) => api.post('/workflows/', workflowData),
-  updateWorkflow: (id, workflowData) => api.put(`/workflows/${id}`, workflowData),
-  deleteWorkflow: (id) => api.delete(`/workflows/${id}`),
-  validateWorkflow: (id) => api.get(`/workflows/${id}/validate`),
+  getWorkflows: () => api.get('/api/workflows/'),
+  getWorkflow: (id) => api.get(`/api/workflows/${id}`),
+  createWorkflow: (workflowData) => api.post('/api/workflows/', workflowData),
+  updateWorkflow: (id, workflowData) => api.put(`/api/workflows/${id}`, workflowData),
+  deleteWorkflow: (id) => api.delete(`/api/workflows/${id}`),
+  validateWorkflow: (id) => api.get(`/api/workflows/${id}/validate`),
 }
 
 // Sessions API
 export const sessionsAPI = {
-  getSessions: (params = {}) => api.get('/sessions/', { params }),
-  getSession: (id) => api.get(`/sessions/${id}`),
-  getActiveCount: () => api.get('/sessions/active/count'),
-  getRecentSummary: (hours = 24) => api.get(`/sessions/recent/summary?hours=${hours}`),
+  getSessions: (params = {}) => api.get('/api/sessions/', { params }),
+  getSession: (id) => api.get(`/api/sessions/${id}`),
+  getActiveCount: () => api.get('/api/sessions/active/count'),
+  getRecentSummary: (hours = 24) => api.get(`/api/sessions/recent/summary?hours=${hours}`),
 }
 
 // Statistics API
 export const statisticsAPI = {
-  getDashboard: () => api.get('/statistics/dashboard'),
-  getDaily: (days = 30) => api.get(`/statistics/daily?days=${days}`),
-  getTrends: (days = 7) => api.get(`/statistics/trends?days=${days}`),
-  getHourlyDistribution: (days = 7) => api.get(`/statistics/hourly-distribution?days=${days}`),
-  getOutcomeAnalysis: (days = 30) => api.get(`/statistics/outcome-analysis?days=${days}`),
+  getDashboard: () => api.get('/api/statistics/dashboard'),
+  getDaily: (days = 30) => api.get(`/api/statistics/daily?days=${days}`),
+  getTrends: (days = 7) => api.get(`/api/statistics/trends?days=${days}`),
+  getHourlyDistribution: (days = 7) => api.get(`/api/statistics/hourly-distribution?days=${days}`),
+  getOutcomeAnalysis: (days = 30) => api.get(`/api/statistics/outcome-analysis?days=${days}`),
 }
 
 // Payments API
 export const paymentsAPI = {
   initiateConsultationPayment: (data) =>
-    api.post('/payments/initiate-consultation', data),
+    api.post('/api/payment-sessions/initiate', data),
   
   getPaymentStatus: (paymentId) =>
-    api.get(`/payments/status/${paymentId}`),
+    api.get(`/api/payment-sessions/${paymentId}/status`),
   
   confirmSMSPayment: (data) =>
-    api.post('/payments/confirm-sms', data),
+    api.post('/api/payment-sessions/confirm-sms', data),
   
   cancelPayment: (paymentId) =>
-    api.post(`/payments/cancel/${paymentId}`),
+    api.post(`/api/payment-sessions/${paymentId}/cancel`),
   
   getBankInfo: () =>
-    api.get('/payments/bank-info'),
+    api.get('/api/payment-sessions/bank-info'),
   
   getPaymentSessions: () =>
-    api.get('/payments/sessions'),
+    api.get('/api/payment-sessions/'),
   
   // Legacy transactions (for history)
   getTransactions: (params = {}) => 
-    api.get('/payments/sessions', { params })
+    api.get('/api/payment-sessions/', { params })
 }
 
 // Telegram API
 export const telegramAPI = {
-  getChats: () => api.get('/telegram/chats'),
-  linkChat: (chatData) => api.post('/telegram/link-chat', chatData),
-  unlinkChat: (chatId) => api.delete(`/telegram/chats/${chatId}`),
-  getBotInfo: () => api.get('/telegram/bot-info'),
+  getChats: () => api.get('/api/telegram/chats'),
+  linkChat: (chatData) => api.post('/api/telegram/link-chat', chatData),
+  unlinkChat: (chatId) => api.delete(`/api/telegram/chats/${chatId}`),
+  getBotInfo: () => api.get('/api/telegram/bot-info'),
+}
+
+// GSM Modules API
+export const gsmModulesAPI = {
+  getModules: () => api.get('/api/gsm-modules/'),
+  createModule: (moduleData) => api.post('/api/gsm-modules/', moduleData),
+  updateModule: (moduleId, moduleData) => api.put(`/api/gsm-modules/${moduleId}`, moduleData),
+  deleteModule: (moduleId) => api.delete(`/api/gsm-modules/${moduleId}`),
+  getDemoCodes: () => api.get('/api/gsm-modules/demo-codes'),
+  regenerateDemoCode: (moduleId) => api.post(`/api/gsm-modules/${moduleId}/regenerate-demo-code`),
 }
 
 export default api
