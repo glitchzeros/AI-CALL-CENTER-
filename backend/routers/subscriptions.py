@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 from database.connection import get_database
 from models.user import User
@@ -22,16 +22,16 @@ router = APIRouter()
 class SubscriptionTierResponse(BaseModel):
     id: int
     name: str
-    display_name: str
-    description: str
+    display_name: Optional[str] = None  # Will be populated from name
+    description: Optional[str]
     price_usd: float
-    price_uzs: int
-    max_daily_ai_minutes: int
-    max_daily_sms: int
-    context_limit: int
-    has_agentic_functions: bool
-    has_agentic_constructor: bool
-    features: str
+    price_uzs: Optional[int]
+    max_daily_ai_minutes: Optional[int]
+    max_daily_sms: Optional[int]
+    context_limit: Optional[int]
+    has_agentic_functions: Optional[bool]
+    has_agentic_constructor: Optional[bool]
+    features: Optional[str]
 
 class PaymentInitiation(BaseModel):
     tier_id: int
@@ -58,16 +58,16 @@ async def get_subscription_tiers(
             SubscriptionTierResponse(
                 id=tier.id,
                 name=tier.name,
-                display_name=tier.display_name,
+                display_name=tier.name.replace('_', ' ').title(),  # Convert name to display name
                 description=tier.description or "",
-                price_usd=float(tier.price_usd),
+                price_usd=float(tier.price_usd or 0),
                 price_uzs=tier.price_uzs,
                 max_daily_ai_minutes=tier.max_daily_ai_minutes,
                 max_daily_sms=tier.max_daily_sms,
                 context_limit=tier.context_limit,
                 has_agentic_functions=tier.has_agentic_functions,
                 has_agentic_constructor=tier.has_agentic_constructor,
-                features=tier.features or "[]"
+                features="[]"  # Default empty features
             )
             for tier in tiers
         ]

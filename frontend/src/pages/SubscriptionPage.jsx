@@ -401,7 +401,7 @@ const SubscriptionPage = () => {
     )
   }
 
-  if (tiersLoading || profileLoading) {
+  if (tiersLoading || profileLoading || subscriptionLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-96">

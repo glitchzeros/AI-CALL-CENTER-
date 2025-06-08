@@ -22,12 +22,6 @@ class User(Base):
     sms_verification_code = Column(String(6))
     sms_verification_expires_at = Column(DateTime)
     
-    # Login SMS verification settings
-    require_sms_login = Column(Boolean, default=True)  # Require SMS verification on login
-    login_sms_code = Column(String(6))
-    login_sms_expires_at = Column(DateTime)
-    last_login_sms_at = Column(DateTime)
-    
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
