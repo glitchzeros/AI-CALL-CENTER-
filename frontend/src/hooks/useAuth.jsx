@@ -38,8 +38,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (loginData) => {
     try {
+      // First try regular login to check if SMS verification is required
       const response = await authAPI.login(loginData)
-      const { access_token, user_id, email, company_number, is_first_login } = response.data
+      const { access_token, user_id, email, company_number, is_first_login, requires_sms } = response.data
+      
+      if (requires_sms) {
+        // SMS verification required, return flag to trigger SMS flow
+        return { success: true, requires_sms: true }
+      }
       
       const userData = {
         id: user_id,
@@ -59,6 +65,12 @@ export const AuthProvider = ({ children }) => {
       return { success: true, isFirstLogin: is_first_login }
     } catch (error) {
       const message = error.response?.data?.detail || 'Login failed'
+      
+      // Check if error indicates SMS verification is required
+      if (message.includes('SMS verification required') || message.includes('requires_sms')) {
+        return { success: true, requires_sms: true }
+      }
+      
       toast.error(message)
       return { success: false, error: message }
     }

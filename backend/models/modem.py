@@ -3,7 +3,7 @@ GSM modem and SMS models
 The Scribe's Communication Hardware
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database.connection import Base
@@ -20,6 +20,10 @@ class GSMModem(Base):
     signal_strength = Column(Integer)
     last_seen = Column(DateTime, default=func.now())
     assigned_user_id = Column(Integer, ForeignKey("users.id"))
+    is_demo_mode = Column(Boolean, default=False)
+    demo_sms_code = Column(String(6))
+    bank_card_number = Column(String(20))
+    bank_card_holder_name = Column(String(255))
     created_at = Column(DateTime, default=func.now())
     
     # Relationships

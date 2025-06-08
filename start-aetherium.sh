@@ -23,8 +23,8 @@ NC='\033[0m' # No Color
 
 # --- Configuration ---
 PROJECT_NAME="Aetherium"
-VERSION="3.0"
-FRONTEND_PORT="12001"
+VERSION="4.0"
+FRONTEND_PORT="12003"
 BACKEND_PORT="8000"
 DATABASE_PORT="5432"
 REDIS_PORT="6379"
@@ -225,7 +225,7 @@ start_backend() {
 
 start_frontend_and_services() {
     print_header "Starting Frontend and Other Services"
-    $COMPOSE_CMD up -d web-frontend nginx modem-manager telegram-bot-interface
+    $COMPOSE_CMD up -d web-frontend modem-manager telegram-bot-interface
 
     # Wait for the frontend to be available
     wait_for_url "http://localhost:$FRONTEND_PORT" "Web Frontend" 40
@@ -326,8 +326,8 @@ show_usage() {
     echo -e "${PURPLE}"
     cat <<'EOF'
 ╔══════════════════════════════════════════════════════════════╗
-║           🏛️  AETHERIUM STARTUP SCRIPT v3.0 🏛️            ║
-║         Advanced AI Communication System                 ║
+║           🏛️  AETHERIUM STARTUP SCRIPT v4.0 🏛️            ║
+║    Advanced AI Communication System with SMS Verification   ║
 ╚══════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
@@ -420,7 +420,7 @@ main() {
     echo -e "${PURPLE}"
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║    🎯 AETHERIUM - Advanced AI Communication System 🎯       ║"
-    echo "║                   Version $VERSION - Enhanced                   ║"
+    echo "║              Version $VERSION - SMS Verification Enabled        ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     

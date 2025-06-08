@@ -62,20 +62,9 @@ async def init_database():
             result = await conn.execute(text("SELECT 1"))
             logger.info("✅ Database connection established")
             
-            # Verify key tables exist
-            tables_check = await conn.execute(text("""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public' 
-                AND table_name IN ('users', 'subscription_tiers', 'scribe_workflows')
-            """))
-            
-            tables = [row[0] for row in tables_check.fetchall()]
-            
-            if len(tables) >= 3:
-                logger.info("✅ Database schema verified")
-            else:
-                logger.warning(f"⚠️ Database schema incomplete. Found tables: {tables}")
+            # Create all tables
+            await conn.run_sync(Base.metadata.create_all)
+            logger.info("✅ Database schema initialized")
                 
     except Exception as e:
         logger.error(f"❌ Database initialization failed: {e}")

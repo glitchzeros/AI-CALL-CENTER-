@@ -108,7 +108,7 @@ services:
         - VITE_WS_BASE_URL=${VITE_WS_BASE_URL:-ws://localhost:8000}
     container_name: aetherium_frontend
     ports:
-      - "${FRONTEND_PORT:-12000}:80"
+      - "${FRONTEND_PORT:-12003}:80"
     depends_on:
       - backend-api
     restart: unless-stopped

@@ -15,6 +15,7 @@ import InvocationEditorPage from './pages/InvocationEditorPage'
 import StatisticsPage from './pages/StatisticsPage'
 import SessionsPage from './pages/SessionsPage'
 import TranslationTestPage from './pages/TranslationTestPage'
+import GSMModulesPage from './pages/GSMModulesPage'
 
 function App() {
   return (
@@ -62,6 +63,12 @@ function App() {
             <Route path="/sessions" element={
               <ProtectedRoute>
                 <SessionsPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/gsm-modules" element={
+              <ProtectedRoute>
+                <GSMModulesPage />
               </ProtectedRoute>
             } />
             

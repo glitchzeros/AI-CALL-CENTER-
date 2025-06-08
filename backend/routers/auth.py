@@ -17,8 +17,10 @@ from datetime import datetime, timedelta
 from database.connection import get_database
 from models.user import User
 from models.company_number import CompanyNumberPool
+from models.sms_verification import SMSVerificationSession
 from services.sms_service import SMSService
 from services.auth_service import AuthService
+from services.gsm_service import GSMService
 from utils.security import verify_password, hash_password, create_access_token
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,14 @@ class UserLogin(BaseModel):
     login_identifier: str  # Email or phone number
     password: str
 
+class LoginSMSRequest(BaseModel):
+    login_identifier: str
+    password: str
+
+class LoginSMSVerification(BaseModel):
+    login_identifier: str
+    verification_code: str
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
@@ -47,6 +57,22 @@ class TokenResponse(BaseModel):
     email: str
     company_number: Optional[str]
     is_first_login: bool
+    requires_sms: Optional[bool] = False
+
+class SMSCodeResponse(BaseModel):
+    message: str
+    demo_code: Optional[str] = None
+    expires_in_minutes: int = 10
+
+class DemoCodeRequest(BaseModel):
+    login_identifier: str
+
+class SMSVerificationResponse(BaseModel):
+    message: str
+    verification_required: bool
+    is_demo: bool
+    demo_code: Optional[str] = None
+    session_id: Optional[int] = None
 
 @router.post("/register", response_model=dict)
 async def register_user(
@@ -183,7 +209,7 @@ async def login_user(
     db: AsyncSession = Depends(get_database)
 ):
     """
-    User login
+    User login with optional SMS verification
     The Scribe's Client Authentication
     """
     try:
@@ -202,6 +228,18 @@ async def login_user(
         if not user.is_verified:
             raise HTTPException(status_code=401, detail="Account not verified")
         
+        # Check if SMS verification is required for login
+        if user.require_sms_login:
+            return TokenResponse(
+                access_token="",
+                token_type="bearer",
+                user_id=user.id,
+                email=user.email,
+                company_number=user.company_number,
+                is_first_login=False,
+                requires_sms=True
+            )
+        
         # Create access token
         access_token = create_access_token(data={"sub": str(user.id)})
         
@@ -213,12 +251,126 @@ async def login_user(
             user_id=user.id,
             email=user.email,
             company_number=user.company_number,
-            is_first_login=False  # This is a subsequent login
+            is_first_login=False
         )
         
     except Exception as e:
         logger.error(f"Login error: {e}")
         raise HTTPException(status_code=500, detail="Login failed")
+
+@router.post("/login-sms-request", response_model=SMSCodeResponse)
+async def request_login_sms(
+    login_data: LoginSMSRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_database)
+):
+    """
+    Request SMS verification code for login
+    The Scribe's Login Verification Request
+    """
+    try:
+        # Find user by email or phone number
+        result = await db.execute(
+            select(User).where(
+                (User.email == login_data.login_identifier) |
+                (User.phone_number == login_data.login_identifier)
+            )
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user or not verify_password(login_data.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        if not user.is_verified:
+            raise HTTPException(status_code=401, detail="Account not verified")
+        
+        # Generate SMS verification code
+        verification_code = f"{secrets.randbelow(900000) + 100000:06d}"
+        
+        # Update user with login SMS code
+        user.login_sms_code = verification_code
+        user.login_sms_expires_at = datetime.utcnow() + timedelta(minutes=10)
+        
+        await db.commit()
+        
+        # Send SMS verification code
+        sms_service = SMSService()
+        demo_code = None
+        
+        # Check if we should use demo mode
+        if await sms_service.is_demo_mode_available():
+            demo_code = verification_code
+            logger.info(f"Demo SMS code for {user.email}: {verification_code}")
+        else:
+            background_tasks.add_task(
+                sms_service.send_login_verification_sms,
+                user.phone_number,
+                verification_code
+            )
+        
+        return SMSCodeResponse(
+            message="SMS verification code sent. Please check your phone.",
+            demo_code=demo_code,
+            expires_in_minutes=10
+        )
+        
+    except Exception as e:
+        logger.error(f"Login SMS request error: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to send SMS verification code")
+
+@router.post("/login-sms-verify", response_model=TokenResponse)
+async def verify_login_sms(
+    verification_data: LoginSMSVerification,
+    db: AsyncSession = Depends(get_database)
+):
+    """
+    Verify SMS code for login
+    The Scribe's Login Verification
+    """
+    try:
+        # Find user by email or phone number
+        result = await db.execute(
+            select(User).where(
+                (User.email == verification_data.login_identifier) |
+                (User.phone_number == verification_data.login_identifier)
+            )
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check verification code
+        if (user.login_sms_code != verification_data.verification_code or
+            user.login_sms_expires_at < datetime.utcnow()):
+            raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+        
+        # Clear SMS verification data
+        user.login_sms_code = None
+        user.login_sms_expires_at = None
+        user.last_login_sms_at = datetime.utcnow()
+        
+        await db.commit()
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user.id)})
+        
+        logger.info(f"User logged in via SMS verification: {user.email}")
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user_id=user.id,
+            email=user.email,
+            company_number=user.company_number,
+            is_first_login=False
+        )
+        
+    except Exception as e:
+        logger.error(f"Login SMS verification error: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="SMS verification failed")
 
 @router.post("/resend-sms")
 async def resend_sms_code(

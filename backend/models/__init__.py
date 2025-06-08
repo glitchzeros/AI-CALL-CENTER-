@@ -13,6 +13,8 @@ from .payment import PaymentTransaction
 from .telegram import TelegramChat
 from .dream_journal import ScribeDreamJournal
 from .company_number import CompanyNumberPool
+from .gsm_module import GSMModule, PaymentSession
+from .sms_verification import SMSVerificationSession
 
 __all__ = [
     "User",
@@ -27,5 +29,8 @@ __all__ = [
     "PaymentTransaction",
     "TelegramChat",
     "ScribeDreamJournal",
-    "CompanyNumberPool"
+    "CompanyNumberPool",
+    "GSMModule",
+    "PaymentSession",
+    "SMSVerificationSession"
 ]
