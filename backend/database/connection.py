@@ -42,19 +42,25 @@ async def get_database() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency to get database session
     """
+    session = None
     try:
-        async with AsyncSessionLocal() as session:
-            try:
-                yield session
-            except Exception as e:
-                logger.error(f"Database session error during operation: {e}")
-                await session.rollback()
-                raise
-            finally:
-                await session.close()
+        session = AsyncSessionLocal()
+        yield session
+        await session.commit()
     except Exception as e:
-        logger.error(f"Database session creation error: {e}")
+        logger.error(f"Database session error during operation: {e}")
+        if session:
+            try:
+                await session.rollback()
+            except Exception as rollback_error:
+                logger.error(f"Error during rollback: {rollback_error}")
         raise
+    finally:
+        if session:
+            try:
+                await session.close()
+            except Exception as close_error:
+                logger.error(f"Error closing session: {close_error}")
 
 async def init_database():
     """

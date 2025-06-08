@@ -58,11 +58,11 @@ class AdminTaskScheduler:
         """Cleanup expired API key assignments every hour"""
         while self.running:
             try:
-                async for db in get_database():
+                from database.connection import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
                     cleaned_count = await self.admin_service.cleanup_expired_assignments(db)
                     if cleaned_count > 0:
                         logger.info(f"🧹 Cleaned up {cleaned_count} expired API key assignments")
-                    break
                 
                 # Wait 1 hour
                 await asyncio.sleep(3600)
@@ -77,11 +77,11 @@ class AdminTaskScheduler:
         """Update modem status every 5 minutes"""
         while self.running:
             try:
-                async for db in get_database():
+                from database.connection import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
                     updated_count = await self.admin_service.update_modem_status(db)
                     if updated_count > 0:
                         logger.info(f"📡 Updated status for {updated_count} modems")
-                    break
                 
                 # Wait 5 minutes
                 await asyncio.sleep(300)
@@ -96,10 +96,10 @@ class AdminTaskScheduler:
         """Update usage statistics every 30 minutes"""
         while self.running:
             try:
-                async for db in get_database():
+                from database.connection import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
                     await self._update_api_key_usage_stats(db)
                     await self._update_modem_usage_stats(db)
-                    break
                 
                 # Wait 30 minutes
                 await asyncio.sleep(1800)
