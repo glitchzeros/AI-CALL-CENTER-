@@ -456,6 +456,84 @@ start_core_services() {
     return 0
 }
 
+run_database_migrations() {
+    print_header "Running Database Migrations"
+    
+    print_status "Checking for pending migrations..."
+    
+    # Check if migration file exists
+    local migration_file="backend/migrations/004_update_subscription_tiers.sql"
+    if [[ -f "$migration_file" ]]; then
+        print_status "Found subscription system migration. Running migration..."
+        
+        # Run the migration using the database container
+        if $COMPOSE_CMD exec -T database psql -U demo_user -d aetherium_demo -f /docker-entrypoint-initdb.d/004_update_subscription_tiers.sql 2>/dev/null; then
+            print_success "✅ Subscription system migration completed successfully"
+        else
+            # Try alternative method - copy and run migration
+            print_status "Trying alternative migration method..."
+            if $COMPOSE_CMD exec -T database psql -U demo_user -d aetherium_demo -c "
+                -- Add new columns to subscription_tiers if they don't exist
+                DO \$\$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscription_tiers' AND column_name='price_uzs') THEN
+                        ALTER TABLE subscription_tiers ADD COLUMN price_uzs INTEGER;
+                        ALTER TABLE subscription_tiers ADD COLUMN max_daily_ai_minutes INTEGER DEFAULT 240;
+                        ALTER TABLE subscription_tiers ADD COLUMN max_daily_sms INTEGER DEFAULT 100;
+                        ALTER TABLE subscription_tiers ADD COLUMN has_agentic_functions BOOLEAN DEFAULT true;
+                        ALTER TABLE subscription_tiers ADD COLUMN has_agentic_constructor BOOLEAN DEFAULT true;
+                    END IF;
+                END \$\$;
+                
+                -- Create user_daily_usage table if it doesn't exist
+                CREATE TABLE IF NOT EXISTS user_daily_usage (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    usage_date DATE NOT NULL DEFAULT CURRENT_DATE,
+                    ai_minutes_used INTEGER DEFAULT 0,
+                    sms_count_used INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, usage_date)
+                );
+                
+                -- Update existing tiers with new pricing
+                UPDATE subscription_tiers SET 
+                    price_uzs = 250000, 
+                    max_daily_ai_minutes = 240, 
+                    max_daily_sms = 100,
+                    has_agentic_functions = true,
+                    has_agentic_constructor = true
+                WHERE name = 'tier1';
+                
+                UPDATE subscription_tiers SET 
+                    price_uzs = 750000, 
+                    max_daily_ai_minutes = 480, 
+                    max_daily_sms = 300,
+                    has_agentic_functions = true,
+                    has_agentic_constructor = true
+                WHERE name = 'tier2';
+                
+                UPDATE subscription_tiers SET 
+                    price_uzs = 1250000, 
+                    max_daily_ai_minutes = 999999, 
+                    max_daily_sms = 999999,
+                    has_agentic_functions = true,
+                    has_agentic_constructor = true
+                WHERE name = 'tier3';
+            "; then
+                print_success "✅ Subscription system migration completed via direct SQL"
+            else
+                print_warning "⚠️  Migration may have failed, but continuing startup..."
+            fi
+        fi
+    else
+        print_info "No new migrations found."
+    fi
+    
+    print_success "Database migration check completed."
+}
+
 start_backend() {
     print_header "Starting Backend API"
     
@@ -725,7 +803,7 @@ main() {
     echo -e "${PURPLE}"
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║    🎯 AETHERIUM - Advanced AI Communication System 🎯       ║"
-    echo "║              Version $VERSION - SMS Verification Enabled        ║"
+    echo "║         Version $VERSION - UZS Subscription System Enabled      ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
@@ -745,6 +823,11 @@ main() {
     
     if ! start_core_services; then
         print_warning "Core services may not be fully ready, but continuing..."
+    fi
+    
+    # Run database migrations after core services are up
+    if ! run_database_migrations; then
+        print_warning "Database migrations may have failed, but continuing..."
     fi
     
     if ! start_backend; then
