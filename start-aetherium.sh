@@ -45,21 +45,192 @@ print_info() { echo -e "${CYAN}[$(date +'%H:%M:%S')] 💡 $1${NC}"; }
 
 # --- Core Functions ---
 
+# Function to start Docker service in different environments
+start_docker_service() {
+    print_status "Attempting to start Docker service..."
+    
+    # Try systemctl first (most common on modern Linux systems)
+    if command -v systemctl >/dev/null 2>&1; then
+        if systemctl is-active --quiet docker; then
+            print_info "Docker service is already running via systemctl."
+            return 0
+        fi
+        
+        print_status "Starting Docker via systemctl..."
+        if sudo systemctl start docker 2>/dev/null; then
+            print_success "Docker service started via systemctl."
+            return 0
+        else
+            print_warning "Failed to start Docker via systemctl, trying alternative methods..."
+        fi
+    fi
+    
+    # Try service command (older Linux systems)
+    if command -v service >/dev/null 2>&1; then
+        print_status "Starting Docker via service command..."
+        if sudo service docker start 2>/dev/null; then
+            print_success "Docker service started via service command."
+            return 0
+        else
+            print_warning "Failed to start Docker via service command, trying dockerd..."
+        fi
+    fi
+    
+    # Try starting dockerd directly (container environments, development)
+    if command -v dockerd >/dev/null 2>&1; then
+        print_status "Starting Docker daemon directly..."
+        
+        # Check if dockerd is already running
+        if pgrep -f dockerd >/dev/null 2>&1; then
+            print_info "Docker daemon is already running."
+            return 0
+        fi
+        
+        # Start dockerd in background
+        sudo dockerd > /tmp/docker.log 2>&1 &
+        local dockerd_pid=$!
+        
+        # Wait a bit for dockerd to initialize
+        sleep 5
+        
+        # Check if dockerd started successfully
+        if kill -0 $dockerd_pid 2>/dev/null; then
+            print_success "Docker daemon started directly (PID: $dockerd_pid)."
+            return 0
+        else
+            print_error "Failed to start Docker daemon directly."
+        fi
+    fi
+    
+    # If all methods fail
+    print_error "Unable to start Docker service. Please start Docker manually:"
+    print_info "  - On systemd systems: sudo systemctl start docker"
+    print_info "  - On older systems: sudo service docker start"
+    print_info "  - In containers: sudo dockerd &"
+    return 1
+}
+
+# Function to install Docker on various Linux distributions
+install_docker() {
+    print_status "Installing Docker..."
+    
+    # Detect the operating system
+    if [[ -f /etc/os-release ]]; then
+        . /etc/os-release
+        OS=$ID
+        VERSION=$VERSION_ID
+    else
+        print_error "Cannot detect operating system. Please install Docker manually."
+        return 1
+    fi
+    
+    case $OS in
+        ubuntu|debian)
+            print_status "Installing Docker on $OS..."
+            
+            # Update package index
+            sudo apt-get update -qq
+            
+            # Install prerequisites
+            sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+            
+            # Add Docker's official GPG key
+            curl -fsSL https://download.docker.com/linux/$OS/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            
+            # Set up the stable repository
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            # Update package index again
+            sudo apt-get update -qq
+            
+            # Install Docker Engine
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            
+            print_success "Docker installed successfully on $OS."
+            ;;
+            
+        centos|rhel|fedora)
+            print_status "Installing Docker on $OS..."
+            
+            # Install yum-utils
+            sudo yum install -y yum-utils
+            
+            # Add Docker repository
+            sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+            
+            # Install Docker Engine
+            sudo yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            
+            print_success "Docker installed successfully on $OS."
+            ;;
+            
+        alpine)
+            print_status "Installing Docker on Alpine Linux..."
+            
+            # Update package index
+            sudo apk update
+            
+            # Install Docker
+            sudo apk add docker docker-compose
+            
+            print_success "Docker installed successfully on Alpine Linux."
+            ;;
+            
+        *)
+            print_warning "Unsupported operating system: $OS"
+            print_info "Please install Docker manually from: https://docs.docker.com/get-docker/"
+            return 1
+            ;;
+    esac
+    
+    # Add current user to docker group (if not root)
+    if [[ $EUID -ne 0 ]]; then
+        sudo usermod -aG docker $USER
+        print_info "Added user $USER to docker group. You may need to log out and back in."
+    fi
+    
+    return 0
+}
+
 # Function to check for essential dependencies like Docker and Docker Compose.
 check_dependencies() {
     print_header "Checking System Dependencies"
     
     # Check for Docker
     if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed. Please install it first."
-        print_info "Visit: https://docs.docker.com/get-docker/"
-        exit 1
+        print_warning "Docker is not installed. Attempting to install Docker..."
+        install_docker
+        
+        # Check again after installation
+        if ! command -v docker &> /dev/null; then
+            print_error "Docker installation failed. Please install it manually."
+            print_info "Visit: https://docs.docker.com/get-docker/"
+            exit 1
+        fi
     fi
     
-    # Check if Docker daemon is running
+    # Check if Docker daemon is running, start if needed
     if ! docker info &> /dev/null; then
-        print_error "Docker daemon is not running. Please start the Docker service."
-        exit 1
+        print_warning "Docker daemon is not running. Attempting to start Docker service..."
+        start_docker_service
+        
+        # Wait for Docker to be ready
+        local max_attempts=30
+        local attempt=1
+        while [[ $attempt -le $max_attempts ]]; do
+            if docker info &> /dev/null; then
+                print_success "Docker daemon is now running."
+                break
+            fi
+            print_status "Waiting for Docker daemon... (attempt $attempt/$max_attempts)"
+            sleep 2
+            ((attempt++))
+        done
+        
+        if [[ $attempt -gt $max_attempts ]]; then
+            print_error "Failed to start Docker daemon after $max_attempts attempts."
+            exit 1
+        fi
     fi
     
     # Check for Docker Compose (V2 plugin or V1 standalone)
