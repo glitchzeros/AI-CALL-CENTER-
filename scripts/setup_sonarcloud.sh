@@ -104,7 +104,8 @@ if [[ -n "${SONAR_TOKEN:-}" ]]; then
     echo -e "\n${CYAN}🔍 Testing SonarCloud connection...${NC}"
     
     if command -v curl >/dev/null 2>&1; then
-        response=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/authentication/validate" || echo "error")
+        # Use SONAR_TOKEN environment variable for authentication
+        response=$(curl -s -u "${SONAR_TOKEN}:" "https://sonarcloud.io/api/authentication/validate" || echo "error")
         if [[ "$response" == *"valid"* ]]; then
             echo -e "${GREEN}✅ SonarCloud token is valid${NC}"
         else

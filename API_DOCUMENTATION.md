@@ -29,7 +29,7 @@ Content-Type: application/json
 **Response:**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access_token": "jwt_token_here",
   "token_type": "bearer",
   "user_id": 1,
   "email": "user@example.com",
