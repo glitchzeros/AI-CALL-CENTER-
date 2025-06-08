@@ -26,5 +26,5 @@ class CallStatistics(Base):
     # Unique constraint to prevent duplicate entries per user per day
     __table_args__ = (UniqueConstraint('user_id', 'date', name='_user_date_uc'),)
     
-    # Relationships
-    user = relationship("User", back_populates="statistics")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User", back_populates="statistics")

@@ -26,9 +26,9 @@ class PaymentTransaction(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # Relationships
-    user = relationship("User", back_populates="payments")
-    subscription = relationship("UserSubscription", back_populates="payments")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User", back_populates="payments")
+    # subscription = relationship("UserSubscription", back_populates="payments")
 
 class ManualPaymentSession(Base):
     __tablename__ = "manual_payment_sessions"
@@ -47,5 +47,5 @@ class ManualPaymentSession(Base):
     confirmed_at = Column(DateTime, nullable=True)
     sms_content = Column(Text, nullable=True)
     
-    # Relationships
-    user = relationship("User")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User")

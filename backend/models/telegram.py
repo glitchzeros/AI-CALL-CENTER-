@@ -20,5 +20,5 @@ class TelegramChat(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
     
-    # Relationships
-    user = relationship("User")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User")

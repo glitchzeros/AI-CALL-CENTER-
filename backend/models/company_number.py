@@ -18,5 +18,5 @@ class CompanyNumberPool(Base):
     assigned_at = Column(DateTime)
     created_at = Column(DateTime, default=func.now())
     
-    # Relationships
-    assigned_user = relationship("User")
+    # Relationships - temporarily disabled to avoid issues
+    # assigned_user = relationship("User")

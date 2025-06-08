@@ -19,11 +19,14 @@ from pathlib import Path
 
 from database.connection import get_database, init_database
 from sqlalchemy import text
-from routers import auth, users, subscriptions, workflows, sessions, statistics, payments, telegram_integration, support, admin, gsm_modules, payment_sessions, landing, ai_sessions
-from services.dream_journal import DreamJournalService
+# Temporarily import only essential routers to isolate subscription issues
+from routers import subscriptions, landing
+# from routers import auth, users, workflows, sessions, statistics, payments, telegram_integration, support, admin, gsm_modules, payment_sessions, ai_sessions
+# Temporarily disable service imports that import models with relationships
+# from services.dream_journal import DreamJournalService
 from services.gemini_client import GeminiClient
 from services.edge_tts_client import EdgeTTSClient
-from services.scheduler import start_admin_scheduler, stop_admin_scheduler
+# from services.scheduler import start_admin_scheduler, stop_admin_scheduler
 from utils.logging_config import setup_logging
 from utils.middleware import (
     RequestLoggingMiddleware,
@@ -38,7 +41,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 # Initialize services
-dream_journal_service = DreamJournalService()
+# dream_journal_service = DreamJournalService()  # Temporarily disabled
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,8 +52,8 @@ async def lifespan(app: FastAPI):
     await init_database()
     
     # Start background services
-    await dream_journal_service.start_nightly_analysis()
-    await start_admin_scheduler()
+    # await dream_journal_service.start_nightly_analysis()  # Temporarily disabled
+    # await start_admin_scheduler()  # Temporarily disabled
     
     logger.info("✨ Aetherium Backend Ready - The Scribe is Listening")
     
@@ -58,8 +61,8 @@ async def lifespan(app: FastAPI):
     
     # Cleanup
     logger.info("🌙 Aetherium Backend Shutting Down - The Scribe Rests")
-    await dream_journal_service.stop()
-    await stop_admin_scheduler()
+    # await dream_journal_service.stop()  # Temporarily disabled
+    # await stop_admin_scheduler()  # Temporarily disabled
 
 # Create FastAPI app
 app = FastAPI(
@@ -99,20 +102,23 @@ static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(users.router, prefix="/api/users", tags=["Users"])
+# Temporarily include only essential routers to isolate subscription issues
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["Subscriptions"])
-app.include_router(workflows.router, prefix="/api/workflows", tags=["Workflows"])
-app.include_router(sessions.router, prefix="/api/sessions", tags=["Sessions"])
-app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
-app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
-app.include_router(telegram_integration.router, prefix="/api/telegram", tags=["Telegram"])
-app.include_router(support.router, tags=["Support"])
-app.include_router(admin.router, tags=["Admin"])
-app.include_router(gsm_modules.router, prefix="/api/gsm-modules", tags=["GSM Modules"])
-app.include_router(payment_sessions.router, prefix="/api/payment-sessions", tags=["Payment Sessions"])
-app.include_router(ai_sessions.router, prefix="/api/ai-sessions", tags=["AI Sessions"])
 app.include_router(landing.router, tags=["Landing"])
+
+# Temporarily disabled routers to isolate SQLAlchemy relationship issues
+# app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+# app.include_router(users.router, prefix="/api/users", tags=["Users"])
+# app.include_router(workflows.router, prefix="/api/workflows", tags=["Workflows"])
+# app.include_router(sessions.router, prefix="/api/sessions", tags=["Sessions"])
+# app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
+# app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+# app.include_router(telegram_integration.router, prefix="/api/telegram", tags=["Telegram"])
+# app.include_router(support.router, tags=["Support"])
+# app.include_router(admin.router, tags=["Admin"])
+# app.include_router(gsm_modules.router, prefix="/api/gsm-modules", tags=["GSM Modules"])
+# app.include_router(payment_sessions.router, prefix="/api/payment-sessions", tags=["Payment Sessions"])
+# app.include_router(ai_sessions.router, prefix="/api/ai-sessions", tags=["AI Sessions"])
 
 @app.get("/")
 async def root():
@@ -140,7 +146,7 @@ async def health_check():
                 "database": "connected",
                 "gemini_api": "configured" if os.getenv("GEMINI_API_KEY") else "not_configured",
                 "edge_tts": "available",
-                "dream_journal": "active" if dream_journal_service.is_running else "inactive"
+                "dream_journal": "disabled"  # Temporarily disabled
             }
         }
     except Exception as e:

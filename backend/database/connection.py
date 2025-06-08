@@ -44,11 +44,18 @@ async def get_database() -> AsyncGenerator[AsyncSession, None]:
     """
     session = None
     try:
+        print("DEBUG: Creating AsyncSessionLocal...")
         session = AsyncSessionLocal()
+        print("DEBUG: Session created, yielding...")
         yield session
+        print("DEBUG: After yield, committing...")
         await session.commit()
+        print("DEBUG: Commit successful")
     except Exception as e:
-        logger.error(f"Database session error during operation: {e}")
+        import traceback
+        error_details = f"Database session error during operation: {e}\nTraceback: {traceback.format_exc()}"
+        logger.error(error_details)
+        print(f"FULL ERROR: {error_details}")  # This will show in container logs
         if session:
             try:
                 await session.rollback()
