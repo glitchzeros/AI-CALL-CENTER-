@@ -31,21 +31,38 @@ const SubscriptionPage = () => {
   const [timeRemaining, setTimeRemaining] = useState(0)
 
   // Fetch subscription tiers
-  const { data: tiers, isLoading: tiersLoading } = useQuery(
+  const { data: tiers, isLoading: tiersLoading, error: tiersError } = useQuery(
     'subscription-tiers',
     subscriptionsAPI.getTiers
   )
 
   // Fetch user profile for current subscription
-  const { data: profile, isLoading: profileLoading } = useQuery(
+  const { data: profile, isLoading: profileLoading, error: profileError } = useQuery(
     'user-profile',
     usersAPI.getProfile
   )
 
   // Fetch payment transactions
-  const { data: transactions, isLoading: transactionsLoading } = useQuery(
+  const { data: transactions, isLoading: transactionsLoading, error: transactionsError } = useQuery(
     'payment-transactions',
     () => paymentsAPI.getTransactions({ limit: 10 })
+  )
+
+  // Fetch current subscription and usage
+  const { data: mySubscription, isLoading: subscriptionLoading, error: subscriptionError } = useQuery(
+    'my-subscription',
+    subscriptionsAPI.getMySubscription,
+    { 
+      refetchInterval: 30000, // Refresh every 30 seconds
+      retry: false // Don't retry on error to see the actual error
+    }
+  )
+
+  // Fetch usage status
+  const { data: usageStatus, isLoading: usageLoading } = useQuery(
+    'usage-status',
+    subscriptionsAPI.getUsageStatus,
+    { refetchInterval: 60000 } // Refresh every minute
   )
 
   // Manual payment initiation mutation
@@ -169,6 +186,9 @@ const SubscriptionPage = () => {
 
   const getTierIcon = (tierName) => {
     switch (tierName.toLowerCase()) {
+      case 'tier1': return Zap
+      case 'tier2': return Star
+      case 'tier3': return Crown
       case 'apprentice': return Zap
       case 'journeyman': return Star
       case 'master scribe': return Crown
@@ -178,6 +198,9 @@ const SubscriptionPage = () => {
 
   const getTierColor = (tierName) => {
     switch (tierName.toLowerCase()) {
+      case 'tier1': return 'coffee-brown'
+      case 'tier2': return 'coffee-sienna'
+      case 'tier3': return 'yellow-600'
       case 'apprentice': return 'coffee-brown'
       case 'journeyman': return 'coffee-sienna'
       case 'master scribe': return 'yellow-600'
@@ -218,9 +241,9 @@ const SubscriptionPage = () => {
             <Icon size={32} className={`text-${colorClass}`} />
           </div>
           
-          <h3 className="heading-secondary text-xl mb-2">{tier.name}</h3>
+          <h3 className="heading-secondary text-xl mb-2">{tier.display_name || tier.name}</h3>
           <div className="mb-4">
-            <span className="text-3xl font-bold text-coffee-brown">{(tier.price_usd * 12300).toLocaleString()}</span>
+            <span className="text-3xl font-bold text-coffee-brown">{tier.price_uzs?.toLocaleString() || (tier.price_usd * 12300).toLocaleString()}</span>
             <span className="text-coffee-sienna ml-2">so'm/oy</span>
             <div className="text-sm text-coffee-sienna mt-1">
               (${tier.price_usd} USD)
@@ -229,6 +252,50 @@ const SubscriptionPage = () => {
         </div>
 
         <div className="space-y-4 mb-8">
+          {/* Daily AI Minutes */}
+          <div className="flex items-start space-x-3">
+            <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-coffee-brown">Daily AI Call Processing</p>
+              <p className="text-sm text-coffee-sienna">
+                {tier.max_daily_ai_minutes >= 999999 ? 'Unlimited minutes' : `${tier.max_daily_ai_minutes} minutes per day`}
+              </p>
+            </div>
+          </div>
+
+          {/* Daily SMS */}
+          <div className="flex items-start space-x-3">
+            <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-coffee-brown">Daily SMS Limit</p>
+              <p className="text-sm text-coffee-sienna">
+                {tier.max_daily_sms >= 999999 ? 'Unlimited SMS' : `${tier.max_daily_sms} SMS per day (incoming + outgoing)`}
+              </p>
+            </div>
+          </div>
+
+          {/* Agentic Functions */}
+          {tier.has_agentic_functions && (
+            <div className="flex items-start space-x-3">
+              <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-coffee-brown">Agentic Functions Access</p>
+                <p className="text-sm text-coffee-sienna">Access to advanced AI agent capabilities</p>
+              </div>
+            </div>
+          )}
+
+          {/* Agentic Constructor */}
+          {tier.has_agentic_constructor && (
+            <div className="flex items-start space-x-3">
+              <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-coffee-brown">Agentic Functions Constructor</p>
+                <p className="text-sm text-coffee-sienna">Build and customize your own AI agent functions</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-start space-x-3">
             <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -245,23 +312,7 @@ const SubscriptionPage = () => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
-            <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-coffee-brown">{t('subscription', 'visualWorkflowBuilder')}</p>
-              <p className="text-sm text-coffee-sienna">{t('subscription', 'visualWorkflowDesc')}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            <Check size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-coffee-brown">{t('subscription', 'realtimeAnalytics')}</p>
-              <p className="text-sm text-coffee-sienna">{t('subscription', 'realtimeAnalyticsDesc')}</p>
-            </div>
-          </div>
-
-          {tier.name.toLowerCase() === 'master scribe' && (
+          {(tier.name.toLowerCase() === 'master scribe' || tier.name.toLowerCase() === 'tier3') && (
             <>
               <div className="flex items-start space-x-3">
                 <Crown size={20} className="text-yellow-600 mt-0.5 flex-shrink-0" />
@@ -353,7 +404,29 @@ const SubscriptionPage = () => {
     )
   }
 
-  if (tiersLoading || profileLoading) {
+  // Show errors if any
+  if (tiersError || profileError || subscriptionError) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">Error Loading Subscription Data</h2>
+            {tiersError && <p className="text-red-500 mb-2">Tiers Error: {tiersError.message}</p>}
+            {profileError && <p className="text-red-500 mb-2">Profile Error: {profileError.message}</p>}
+            {subscriptionError && <p className="text-red-500 mb-2">Subscription Error: {subscriptionError.message}</p>}
+            <button 
+              onClick={() => window.location.reload()} 
+              className="btn-primary mt-4"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (tiersLoading || profileLoading || subscriptionLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-96">
@@ -381,9 +454,9 @@ const SubscriptionPage = () => {
         </div>
 
         {/* Current Subscription Status */}
-        {profile?.subscription && (
+        {mySubscription?.data?.has_subscription && (
           <div className="paper-panel bg-coffee-green bg-opacity-10 border-2 border-coffee-green">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
                 <div className="p-3 bg-coffee-green bg-opacity-20 rounded-full">
                   <Shield size={24} className="text-coffee-green" />
@@ -391,10 +464,10 @@ const SubscriptionPage = () => {
                 <div>
                   <h3 className="font-semibold text-coffee-brown">{t('subscription', 'currentPlan')}</h3>
                   <p className="text-coffee-sienna">
-                    {profile.subscription.tier_name} - ${profile.subscription.price_usd}/month
+                    {mySubscription.data.tier.display_name} - {mySubscription.data.tier.price_uzs?.toLocaleString()} UZS/month
                   </p>
                   <p className="text-sm text-coffee-sienna">
-                    {t('subscription', 'nextBilling')}: {new Date(profile.subscription.expires_at).toLocaleDateString()}
+                    {t('subscription', 'nextBilling')}: {mySubscription.data.subscription.expires_at ? new Date(mySubscription.data.subscription.expires_at).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -406,6 +479,54 @@ const SubscriptionPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Daily Usage Status */}
+            {mySubscription.data.usage && (
+              <div className="border-t border-coffee-green border-opacity-30 pt-4">
+                <h4 className="font-medium text-coffee-brown mb-3">Today's Usage</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* AI Minutes Usage */}
+                  <div className="bg-white bg-opacity-50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-coffee-brown">AI Call Processing</span>
+                      <span className="text-xs text-coffee-sienna">
+                        {mySubscription.data.usage.ai_minutes_used || 0} / {mySubscription.data.usage.ai_minutes_limit >= 999999 ? '∞' : mySubscription.data.usage.ai_minutes_limit} min
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-coffee-green h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: mySubscription.data.usage.ai_minutes_limit >= 999999 
+                            ? '20%' 
+                            : `${Math.min(100, (mySubscription.data.usage.ai_minutes_used / mySubscription.data.usage.ai_minutes_limit) * 100)}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* SMS Usage */}
+                  <div className="bg-white bg-opacity-50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-coffee-brown">SMS Messages</span>
+                      <span className="text-xs text-coffee-sienna">
+                        {mySubscription.data.usage.sms_count_used || 0} / {mySubscription.data.usage.sms_limit >= 999999 ? '∞' : mySubscription.data.usage.sms_limit}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-coffee-sienna h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: mySubscription.data.usage.sms_limit >= 999999 
+                            ? '20%' 
+                            : `${Math.min(100, (mySubscription.data.usage.sms_count_used / mySubscription.data.usage.sms_limit) * 100)}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -60,7 +60,7 @@ class PaymentSession(Base):
     confirmation_sms = Column(Text)  # The SMS that confirmed payment
     confirmation_amount = Column(Integer)  # Amount found in confirmation SMS
     
-    # Relationships
-    user = relationship("User")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User")
     gsm_module = relationship("GSMModule", back_populates="payment_sessions")
 

@@ -228,18 +228,6 @@ async def login_user(
         if not user.is_verified:
             raise HTTPException(status_code=401, detail="Account not verified")
         
-        # Check if SMS verification is required for login
-        if user.require_sms_login:
-            return TokenResponse(
-                access_token="",
-                token_type="bearer",
-                user_id=user.id,
-                email=user.email,
-                company_number=user.company_number,
-                is_first_login=False,
-                requires_sms=True
-            )
-        
         # Create access token
         access_token = create_access_token(data={"sub": str(user.id)})
         
@@ -425,13 +413,16 @@ async def get_current_user(
     The Scribe's Identity Verification
     """
     try:
+        logger.info(f"Getting current user with token: {credentials.credentials[:20]}...")
         auth_service = AuthService()
         user_id = auth_service.verify_token(credentials.credentials)
+        logger.info(f"Token verified for user_id: {user_id}")
         
         result = await db.execute(
             select(User).where(User.id == user_id)
         )
         user = result.scalar_one_or_none()
+        logger.info(f"User found: {user.email if user else 'None'}")
         
         if not user:
             raise HTTPException(status_code=401, detail="User not found")

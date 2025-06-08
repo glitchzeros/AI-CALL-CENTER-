@@ -19,5 +19,5 @@ class ScribeWorkflow(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # Relationships
-    user = relationship("User", back_populates="workflows")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User", back_populates="workflows")

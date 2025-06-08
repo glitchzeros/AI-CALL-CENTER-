@@ -42,15 +42,32 @@ async def get_database() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency to get database session
     """
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception as e:
-            logger.error(f"Database session error: {e}")
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+    session = None
+    try:
+        print("DEBUG: Creating AsyncSessionLocal...")
+        session = AsyncSessionLocal()
+        print("DEBUG: Session created, yielding...")
+        yield session
+        print("DEBUG: After yield, committing...")
+        await session.commit()
+        print("DEBUG: Commit successful")
+    except Exception as e:
+        import traceback
+        error_details = f"Database session error during operation: {e}\nTraceback: {traceback.format_exc()}"
+        logger.error(error_details)
+        print(f"FULL ERROR: {error_details}")  # This will show in container logs
+        if session:
+            try:
+                await session.rollback()
+            except Exception as rollback_error:
+                logger.error(f"Error during rollback: {rollback_error}")
+        raise
+    finally:
+        if session:
+            try:
+                await session.close()
+            except Exception as close_error:
+                logger.error(f"Error closing session: {close_error}")
 
 async def init_database():
     """

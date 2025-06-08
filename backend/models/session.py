@@ -26,8 +26,8 @@ class CommunicationSession(Base):
     current_invocation_state = Column(JSON)  # Current workflow state
     created_at = Column(DateTime, default=func.now())
     
-    # Relationships
-    user = relationship("User", back_populates="sessions")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User", back_populates="sessions")
     messages = relationship("SessionMessage", back_populates="session")
 
 class SessionMessage(Base):

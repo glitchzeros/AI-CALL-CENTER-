@@ -183,6 +183,17 @@ export const subscriptionsAPI = {
   initiatePayment: (tierData) => api.post('/api/subscriptions/initiate-payment', tierData),
   startPaymentMonitoring: (paymentData) => api.post('/api/subscriptions/start-payment-monitoring', paymentData),
   getPaymentMonitoringStatus: () => api.get('/api/subscriptions/payment-monitoring-status'),
+  getUsageStatus: () => api.get('/api/subscriptions/usage-status'),
+  getMySubscription: () => api.get('/api/subscriptions/my-subscription'),
+}
+
+// AI Sessions API
+export const aiSessionsAPI = {
+  startSession: (sessionData) => api.post('/api/ai-sessions/start', sessionData),
+  endSession: (sessionData) => api.post('/api/ai-sessions/end', sessionData),
+  getSessionStatus: (sessionId) => api.get(`/api/ai-sessions/status/${sessionId}`),
+  getActiveSessions: () => api.get('/api/ai-sessions/active'),
+  cleanupSessions: () => api.post('/api/ai-sessions/cleanup'),
 }
 
 // Workflows API

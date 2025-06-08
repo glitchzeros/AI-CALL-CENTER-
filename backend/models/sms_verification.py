@@ -23,8 +23,8 @@ class SMSVerificationSession(Base):
     expires_at = Column(DateTime, nullable=False)
     verified_at = Column(DateTime)
     
-    # Relationships
-    user = relationship("User", back_populates="sms_verification_sessions")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User", back_populates="sms_verification_sessions")
 
 class PaymentMonitoringSession(Base):
     __tablename__ = "payment_monitoring_sessions"
@@ -44,8 +44,8 @@ class PaymentMonitoringSession(Base):
     last_sms_check = Column(DateTime, default=func.now())
     sms_content = Column(Text)
     
-    # Relationships
-    user = relationship("User")
+    # Relationships - temporarily disabled to avoid issues
+    # user = relationship("User")
     subscription_tier = relationship("SubscriptionTier")
 
 class GSMModuleManagement(Base):
@@ -58,6 +58,6 @@ class GSMModuleManagement(Base):
     action_data = Column(Text)  # JSON string of action details
     created_at = Column(DateTime, default=func.now())
     
-    # Relationships
+    # Relationships - temporarily disabled to avoid issues
     modem = relationship("GSMModem")
-    performed_by_user = relationship("User")
+    # performed_by_user = relationship("User")

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { authAPI } from '../services/api'
+import { LOCAL_STORAGE_KEYS } from '../utils/constants'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext()
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for stored auth data on mount
-    const storedToken = localStorage.getItem('aetherium_token')
+    const storedToken = localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN)
     const storedUser = localStorage.getItem('aetherium_user')
     
     if (storedToken && storedUser) {
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData)
       setIsFirstLogin(is_first_login)
       
-      localStorage.setItem('aetherium_token', access_token)
+      localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN, access_token)
       localStorage.setItem('aetherium_user', JSON.stringify(userData))
       
       toast.success('Welcome to Aetherium, The Scribe awaits your command')
@@ -103,7 +104,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData)
       setIsFirstLogin(is_first_login)
       
-      localStorage.setItem('aetherium_token', access_token)
+      localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN, access_token)
       localStorage.setItem('aetherium_user', JSON.stringify(userData))
       
       toast.success('Phone verified! Welcome to Aetherium')
@@ -132,7 +133,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
     setToken(null)
     setIsFirstLogin(false)
-    localStorage.removeItem('aetherium_token')
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.AUTH_TOKEN)
     localStorage.removeItem('aetherium_user')
     toast.success('The Scribe bids you farewell')
   }

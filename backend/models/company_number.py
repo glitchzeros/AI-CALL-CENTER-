@@ -16,9 +16,7 @@ class CompanyNumberPool(Base):
     is_assigned = Column(Boolean, default=False)
     assigned_user_id = Column(Integer, ForeignKey("users.id"))
     assigned_at = Column(DateTime)
-    bank_card_number = Column(String(20))
-    bank_card_holder_name = Column(String(255))
     created_at = Column(DateTime, default=func.now())
     
-    # Relationships
-    assigned_user = relationship("User")
+    # Relationships - temporarily disabled to avoid issues
+    # assigned_user = relationship("User")

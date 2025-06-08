@@ -105,7 +105,9 @@ class PaymentMonitoringService:
         """
         try:
             while True:
-                async for db in get_database():
+                # Use proper session management
+                from database.connection import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
                     try:
                         # Get monitoring session
                         result = await db.execute(
@@ -136,12 +138,10 @@ class PaymentMonitoringService:
                         session.last_sms_check = datetime.utcnow()
                         await db.commit()
                         
-                        break
-                        
                     except Exception as e:
                         logger.error(f"Error in payment monitoring iteration: {e}")
                         await db.rollback()
-                        break
+                        raise
                 
                 # Wait 1 minute before next check
                 await asyncio.sleep(60)
