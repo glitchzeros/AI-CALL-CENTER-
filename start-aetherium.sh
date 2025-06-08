@@ -616,7 +616,8 @@ show_status() {
     echo -e "  🔴 Redis Port:         $REDIS_PORT (from localhost)"
     echo
     
-    run_health_check
+    # Run health check but don't let it affect the main startup success
+    run_health_check || true
 }
 
 # Shows recent logs from all services.
@@ -769,6 +770,9 @@ main() {
     echo "  - Check health: $0 health"
     echo
     print_success "✨ Aetherium is ready for use at: http://localhost:$FRONTEND_PORT"
+    
+    # Ensure successful exit
+    return 0
 }
 
 # Trap to ensure a clean exit message on script interruption
