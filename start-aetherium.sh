@@ -96,7 +96,7 @@ check_dependencies() {
 
 # Enhanced port cleanup function
 cleanup_ports() {
-    local ports=($BACKEND_PORT $FRONTEND_PORT $DATABASE_PORT $REDIS_PORT 80 443)
+    local ports=($BACKEND_PORT $FRONTEND_PORT $DATABASE_PORT $REDIS_PORT 80 443 1200)
     
     print_status "Cleaning up port conflicts..."
     
@@ -265,7 +265,7 @@ start_frontend_and_services() {
     sleep 25
     
     # Check frontend availability
-    local frontend_attempts=15
+    local frontend_attempts=250
     local frontend_attempt=1
     
     print_status "Checking frontend availability..."
