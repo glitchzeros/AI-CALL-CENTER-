@@ -1,8 +1,8 @@
-import { API_BASE_URL } from './api'
+import { APP_CONFIG } from '../utils/constants'
 
 class LandingAPI {
   constructor() {
-    this.baseURL = `${API_BASE_URL}/api/landing`
+    this.baseURL = `${APP_CONFIG.apiBaseUrl}/api/landing`
   }
 
   async getLandingInfo() {
